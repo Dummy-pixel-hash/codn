@@ -1,0 +1,25 @@
+# Env
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Logs
+*.log
+
+# SQLite DB (regenerated from data)
+quotes.db
+
+# Environment / virtualenv
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
