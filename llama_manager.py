@@ -10,6 +10,18 @@ import subprocess
 import time
 import requests
 from config import LLAMA_MODEL_PATH, LLAMA_PORT, BASE_DIR
+from font_registry import FontRegistry
+
+# Font descriptions are injected into the system prompt; cache the registry
+# (it only reads the small fonts.json manifest, never loads font files).
+_REGISTRY: FontRegistry | None = None
+
+
+def _get_registry() -> FontRegistry:
+    global _REGISTRY
+    if _REGISTRY is None:
+        _REGISTRY = FontRegistry()
+    return _REGISTRY
 
 
 def start_llama():
@@ -141,6 +153,12 @@ def generate_text_overlay(
     """
     Ask the text model what text + styling to overlay on the generated image.
     Returns a dict with text, font, alignment, color, position, etc.
+
+    The returned dict follows the v2 overlay contract:
+    quote, author, font_style, font, font_weight, alignment, text_color,
+    position (9 anchors), x_offset/y_offset (clamped %), font_size,
+    background_overlay, text_effect (none/shadow/outline/glow), glow_color,
+    text_gradient_from/to, letter_spacing.
     """
     url = f"http://localhost:{LLAMA_PORT}/v1/chat/completions"
     context = [f"Art direction: {art_prompt}" if art_prompt else ""]
@@ -152,7 +170,7 @@ def generate_text_overlay(
     body = {
         "model": "Bonsai-27B",
         "messages": [
-            {"role": "system", "content": _OVERLAY_SYSTEM},
+            {"role": "system", "content": build_overlay_system_prompt()},
             {
                 "role": "user",
                 "content": "\n".join(context)
@@ -177,6 +195,94 @@ def generate_text_overlay(
     raise RuntimeError("Failed to generate text overlay after 3 attempts")
 
 
+def generate_caption(
+    llama_proc,
+    quote: str = "",
+    author: str = "",
+    art_prompt: str = "",
+    category: str = "",
+    theme: str = "",
+    max_tokens: int = 400,
+    trending_terms: list[str] | None = None,
+) -> dict:
+    """
+    Ask the text model to write the Instagram caption for the post.
+
+    Returns a dict: {"caption": str, "hashtags": [str, ...]}. Hashtags are a
+    mix of trending (high-volume) and related (niche) tags, sanitised by
+    _parse_caption_response. When trending_terms is provided, the model is
+    nudged to include hashtags that align with currently-trending searches.
+    Call this while llama-server is still running — it is killed right after
+    to free VRAM.
+    """
+    url = f"http://localhost:{LLAMA_PORT}/v1/chat/completions"
+    context = [f"Art direction: {art_prompt}" if art_prompt else ""]
+    if quote:
+        context.append(f"Quote on the image: {quote}")
+    if author:
+        context.append(f"Quote author: {author}")
+    if category:
+        context.append(f"Content category: {category}")
+    if theme:
+        context.append(f"User theme: {theme}")
+    if trending_terms:
+        context.append(f"Currently trending searches: {', '.join(trending_terms)}")
+
+    body = {
+        "model": "Bonsai-27B",
+        "messages": [
+            {"role": "system", "content": _CAPTION_SYSTEM},
+            {
+                "role": "user",
+                "content": "\n".join(context)
+                + "\n\nWrite the caption and hashtags for this post.",
+            },
+        ],
+        "max_tokens": max_tokens,
+        "temperature": 0.7,
+        "stream": False,
+    }
+
+    return _post_chat(url, body)
+
+
+def _post_chat(url: str, body: dict) -> dict:
+    """POST the chat request with retries; raise on persistent failure."""
+    for attempt in range(3):
+        try:
+            r = requests.post(url, json=body, timeout=60)
+            if r.status_code == 200:
+                text = r.json()["choices"][0]["message"]["content"].strip()
+                return _parse_caption_response(text)
+        except Exception as e:
+            print(f"[llama] generate_caption attempt {attempt+1} failed: {e}")
+            time.sleep(2)
+    raise RuntimeError("Failed to generate caption after 3 attempts")
+
+
+def format_caption(
+    quote: str,
+    author: str,
+    caption_data: dict | None = None,
+    max_chars: int = 2200,
+) -> str:
+    """
+    Build the final upload caption: model caption (or the quote as fallback),
+    attribution, then hashtags. Instagram's caption limit is 2200 characters.
+    """
+    if caption_data and caption_data.get("caption"):
+        caption = caption_data["caption"]
+    else:
+        caption = quote
+    parts = [caption]
+    if author:
+        parts.append(f"— {author}")
+    hashtags = caption_data.get("hashtags", []) if caption_data else []
+    if hashtags:
+        parts.append(" ".join(hashtags))
+    return "\n\n".join(parts)[:max_chars]
+
+
 def _build_art_prompt(system_prompt: str = None) -> str:
     return f"""Generate one self-contained prompt for a square Instagram image.
 
@@ -192,26 +298,40 @@ Rules:
 {f"Creative brief: {system_prompt}" if system_prompt else "Creative brief: an introspective, editorial mood with a memorable visual metaphor."}"""
 
 
-_OVERLAY_SYSTEM = """You are an art director creating a premium, readable Instagram quote post.
+def build_overlay_system_prompt() -> str:
+    """Build the overlay system prompt, injecting condensed font descriptions."""
+    font_guide = _get_registry().build_prompt_text(max_chars=2000)
+    return f"""You are an art director creating a premium, readable Instagram quote post.
 
 Write one original quote inspired by the supplied art direction. The quote must be
 specific and emotionally clear, not a generic motivational cliché. Use 8-16 words,
 one sentence, and no more than 2 short lines when rendered. Do not invent a real
 person's words: set author to an empty string for an original quote.
 
+Available fonts (pick the specific "font" name; "font_style" is its category):
+
+{font_guide}
+
 Output a JSON object with:
 - "quote": one original, impactful sentence (8-16 words)
 - "author": an empty string for original writing; only use a source when explicitly provided
-- "font_style": font choice from: "serif", "sans-serif", "monospace", "handwritten", "display"
+- "font_style": font category from: "serif", "sans-serif", "monospace", "handwritten", "display"
+- "font": one specific font name from the list above (e.g. "Cormorant Garamond")
+- "font_weight": "regular" or "bold"
 - "alignment": one of: "center", "left", "right"
 - "text_color": hex color like "#FFFFFF"
-- "position": where the text goes: "bottom", "top", "center", "middle-left", "middle-right"
+- "position": text anchor from: "bottom", "bottom-left", "bottom-right", "top", "top-left", "top-right", "center", "middle-left", "middle-right"
+- "x_offset": signed percentage (-15 to 15) fine-tuning horizontal placement from the anchor; 0 = default
+- "y_offset": signed percentage (-15 to 15) fine-tuning vertical placement from the anchor; 0 = default
 - "font_size": relative size: "small", "medium", "large", "xlarge"
 - "background_overlay": readability backdrop: "none", "dark-bottom", "light-top", "dark-center" — use a subtle backdrop when needed
-- "text_effect": text treatment: "none", "shadow", "outline" — prefer a subtle shadow when needed
+- "text_effect": text treatment: "none", "shadow", "outline", "glow" — prefer a subtle shadow when needed
+- "glow_color": hex color used when text_effect is "glow" (e.g. "#FFD700")
+- "text_gradient_from" / "text_gradient_to": hex colors for a vertical gradient fill; omit or use "" for solid color
+- "letter_spacing": pixels between letters, 0 to 10; 0 = normal
 
 Choose a position that avoids the main subject described in the art direction.
-Prefer medium font size. Output ONLY valid JSON. No explanations, no markdown."""
+Prefer medium font size and subtle effects. Output ONLY valid JSON. No explanations, no markdown."""
 
 
 def _parse_overlay_response(text: str) -> dict:
@@ -236,41 +356,7 @@ def _parse_overlay_response(text: str) -> dict:
 
 def _normalise_overlay(data: dict) -> dict:
     """Validate model-controlled styling before it reaches Pillow."""
-    allowed = {
-        "font_style": {"serif", "sans-serif", "monospace", "handwritten", "display"},
-        "alignment": {"center", "left", "right"},
-        "position": {"top", "bottom", "center", "middle-left", "middle-right"},
-        "font_size": {"small", "medium", "large", "xlarge"},
-        "background_overlay": {"none", "dark-bottom", "light-top", "dark-center"},
-        "text_effect": {"none", "shadow", "outline"},
-    }
-    result = {
-        "quote": " ".join(str(data.get("quote", "")).split()).strip('"“”'),
-        "author": " ".join(str(data.get("author", "")).split()).strip('"“”'),
-        "font_style": data.get("font_style", "serif"),
-        "alignment": data.get("alignment", "center"),
-        "text_color": data.get("text_color", "#FFFFFF"),
-        "position": data.get("position", "bottom"),
-        "font_size": data.get("font_size", "medium"),
-        "background_overlay": data.get("background_overlay", "none"),
-        "text_effect": data.get("text_effect", "shadow"),
-    }
-    if not result["quote"]:
-        result["quote"] = "Let the quiet reveal what noise conceals."
-    if result["author"].lower() in {"unknown", "n/a", "none", "original"}:
-        result["author"] = ""
-    for key, values in allowed.items():
-        if result[key] not in values:
-            result[key] = "medium" if key == "font_size" else next(iter(values))
-    if not isinstance(result["text_color"], str) or not _is_hex_color(result["text_color"]):
-        result["text_color"] = "#FFFFFF"
-    return result
-
-
-def _is_hex_color(value: str) -> bool:
-    return len(value) in {4, 7} and value.startswith("#") and all(
-        char in "0123456789abcdefABCDEF" for char in value[1:]
-    )
+    return _get_registry().validate(data)
 
 
 _ART_SYSTEM = """You are a creative art prompt generator for professional Instagram content.
@@ -282,8 +368,63 @@ Generate prompts that would produce stunning, professional-looking images. Think
 - Composition and visual impact
 - Subjects and themes
 - A quote caption will be overlaid on the image later, so keep some part of the composition open and uncluttered — balanced negative space anywhere in the frame (not necessarily at the bottom) — so the text can sit anywhere without covering the focal point
+- Never include anything in the prompt that would require the image model to render text: no words, phrases, letters, typography, signage, banners, posters, labels, captions, logos, watermarks, or UI elements. The artwork itself must be text-free; any text is added later by the overlay system
 
 The prompt should be detailed enough to guide an AI image generator toward a professional result. Make it specific and vivid."""
+
+
+_CAPTION_SYSTEM = """You are a social media caption writer for a professional Instagram quote page.
+
+Write one engaging Instagram caption for the image being posted. The caption must:
+- Be 1-3 sentences that complement the quote already on the image without repeating it verbatim
+- Sound authentic and editorial, not like generic motivational spam
+- End with a light hook or question that invites engagement
+- Never include hashtags inside the caption text itself
+
+Then provide a hashtag block:
+- 12-20 hashtags total, a mix of TRENDING (broad, high-volume tags like #quotes, #mindset, #motivation) and RELATED (niche tags specific to the image's subject, mood, category, and quote theme)
+- When the user message lists "Currently trending searches", prefer hashtags that align with those terms where they fit the post naturally; never force a trending term that clashes with the quote or image
+- Output them with a leading "#", lowercase, words separated by underscores (e.g. #mindset_matters)
+- Never invent hashtags for real people or brands
+
+Output ONLY a JSON object with exactly two keys:
+{
+  "caption": "the caption text",
+  "hashtags": ["#trending_tag", "#related_tag"]
+}
+
+No explanations, no markdown, no text outside the JSON."""
+
+
+def _parse_caption_response(text: str) -> dict:
+    """Parse the LLM's caption JSON; fall back to the raw text as the caption."""
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    if start >= 0 and end > start:
+        try:
+            data = json.loads(text[start:end])
+            caption = str(data.get("caption", "")).strip()
+            raw_tags = data.get("hashtags", [])
+            if isinstance(raw_tags, str):
+                raw_tags = [raw_tags]
+            # Sanitise: lowercase, spaces -> underscores, keep alnum/_,
+            # drop tags with no letters (e.g. pure numbers), dedupe.
+            seen: set[str] = set()
+            hashtags: list[str] = []
+            for tag in raw_tags:
+                cleaned = "".join(
+                    c if c.isalnum() or c == "_" else "_"
+                    for c in str(tag).strip().lstrip("#").lower()
+                ).strip("_")
+                if not any(c.isalpha() for c in cleaned):
+                    continue
+                if cleaned not in seen:
+                    seen.add(cleaned)
+                    hashtags.append(f"#{cleaned}")
+            return {"caption": caption, "hashtags": hashtags}
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
+    return {"caption": text.strip(), "hashtags": []}
 
 
 def _wait_for_vram_free(timeout: int = 60):

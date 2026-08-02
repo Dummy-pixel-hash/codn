@@ -26,6 +26,7 @@ import llama_manager
 import comfy_manager
 import text_overlay
 import instagram_uploader
+import trending
 
 # ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -226,6 +227,25 @@ async def generate(req: GenerateRequest):
     text_overlay.add_text_overlay(image_path, output_path, overlay_style)
     print(f"[codn] Final image: {output_path}")
 
+    # Generate the upload caption + hashtags while llama-server is still
+    # running — it gets killed below to free VRAM.
+    caption_data = None
+    if req.upload:
+        print("[codn] Generating upload caption + hashtags...")
+        try:
+            caption_data = llama_manager.generate_caption(
+                _llama_proc,
+                quote=overlay_style.get("quote", ""),
+                author=overlay_style.get("author", ""),
+                art_prompt=art_prompt,
+                category=req.category,
+                theme=req.theme,
+                trending_terms=trending.get_trending_terms(),
+            )
+        except Exception as e:
+            print(f"[codn] Caption generation failed, falling back: {e}")
+            caption_data = None
+
     # Kill llama-server (we're done with it)
     if _llama_proc:
         llama_manager.stop_llama(_llama_proc)
@@ -234,9 +254,9 @@ async def generate(req: GenerateRequest):
     # Phase 4: Upload to Instagram
     if req.upload:
         print("[codn] Phase 4: Uploading to Instagram...")
-        caption = overlay_style["quote"]
-        if overlay_style.get("author"):
-            caption += f"\n\n— {overlay_style['author']}"
+        caption = llama_manager.format_caption(
+            overlay_style["quote"], overlay_style.get("author"), caption_data
+        )
         if req.music:
             # Instagram fetches the public image while this call is in
             # progress. Keep Uvicorn's event loop free to serve /media.

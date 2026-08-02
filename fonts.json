@@ -1,239 +1,243 @@
 {
-  "version": "1.0",
-  "description": "Curated SIL OFL / Apache-2.0 font library for Instagram quote overlays. Each entry includes visual description, best use-cases, and when to avoid it.",
-
-  "fonts": [
-    {
-      "name": "Montserrat",
-      "file": "Montserrat-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Clean geometric sans with open counters and a modern, confident feel. Works well for contemporary, editorial-style quotes.",
-      "use_cases": ["modern philosophy", "tech / startup quotes", "clean minimalist layouts"],
-      "avoid": ["vintage / rustic themes", "script-style elegance"]
-    },
-    {
-      "name": "Open Sans",
-      "file": "OpenSans-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Friendly, neutral sans with excellent legibility at small sizes. Reads as approachable and professional.",
-      "use_cases": ["general-purpose quotes", "corporate / brand-safe content"],
-      "avoid": ["bold statement posts", "handwritten warmth"]
-    },
-    {
-      "name": "Roboto",
-      "file": "Roboto-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Mechanical skeleton with friendly curves. Dense, authoritative presence that commands attention.",
-      "use_cases": ["tech / productivity quotes", "bold statement overlays"],
-      "avoid": ["delicate / feminine layouts"]
-    },
-    {
-      "name": "Inter",
-      "file": "Inter-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Ultra-neutral sans designed for screen readability. Invisible typography — lets the quote speak.",
-      "use_cases": ["minimalist designs", "data / analytics themes", "dark backgrounds"],
-      "avoid": ["warm / organic moods"]
-    },
-    {
-      "name": "Poppins",
-      "file": "Poppins-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Geometric sans with circular curves and a playful, modern energy. Stands out without being loud.",
-      "use_cases": ["lifestyle / wellness quotes", "youthful / energetic content"],
-      "avoid": ["traditional / academic themes"]
-    },
-    {
-      "name": "Raleway",
-      "file": "Raleway-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Elegant, high-contrast sans inspired by Art Deco signage. Thin weights feel luxurious; bold feels editorial.",
-      "use_cases": ["fashion / luxury quotes", "elegant minimalist layouts"],
-      "avoid": ["casual / fun content"]
-    },
-    {
-      "name": "Work Sans",
-      "file": "WorkSans-Regular.ttf",
-      "category": "sans-serif",
-      "visual": "Humanist sans built for clarity on screens. Warm, readable, and unobtrusive.",
-      "use_cases": ["longer quotes needing readability", "education / how-to content"],
-      "avoid": ["bold display headlines"]
-    },
-    {
-      "name": "Cormorant Garamond",
-      "file": "CormorantGaramond-Regular.ttf",
-      "category": "serif",
-      "visual": "Refined Old Style serif with delicate contrast and timeless elegance. Reads like a classic book.",
-      "use_cases": ["literary / poetry quotes", "classic philosophy", "elegant dark backgrounds"],
-      "avoid": ["tech / startup vibes", "bold statement posts"]
-    },
-    {
-      "name": "Libre Baskerville",
-      "file": "LibreBaskerville-Regular.ttf",
-      "category": "serif",
-      "visual": "Bold, authoritative serif with strong character. Built for long reading — dense and commanding.",
-      "use_cases": ["longer quotes", "classic literature / philosophy", "dark-bottom overlays"],
-      "avoid": ["delicate / airy layouts"]
-    },
-    {
-      "name": "Lora",
-      "file": "Lora-Regular.ttf",
-      "category": "serif",
-      "visual": "Well-rounded calligraphic serif with warm, readable curves. Bridges traditional and modern.",
-      "use_cases": ["personal / reflective quotes", "wellness / mindfulness content"],
-      "avoid": ["tech / futuristic themes"]
-    },
-    {
-      "name": "Spectral",
-      "file": "Spectral-Regular.ttf",
-      "category": "serif",
-      "visual": "Smart, high-contrast serif with a scholarly feel. Crisp and distinctive at every size.",
-      "use_cases": ["academic / intellectual quotes", "editorial / magazine style"],
-      "avoid": ["casual / social content"]
-    },
-    {
-      "name": "DM Serif Display",
-      "file": "DMSerifDisplay-Regular.ttf",
-      "category": "serif",
-      "visual": "Bold serif with dramatic contrast and a confident, editorial presence. Commands attention.",
-      "use_cases": ["headline-style quotes", "bold statement posts", "fashion / luxury"],
-      "avoid": ["small text / dense paragraphs"]
-    },
-    {
-      "name": "EB Garamond 12",
-      "file": "EBGaramond12-Regular.ttf",
-      "category": "serif",
-      "visual": "Authentic Renaissance-era serif with authentic letterforms. Reads like a 16th-century manuscript.",
-      "use_cases": ["classical quotes", "heritage / tradition themes", "academic content"],
-      "avoid": ["modern / tech vibes"]
-    },
-    {
-      "name": "Crimson Text",
-      "file": "CrimsonText-Regular.ttf",
-      "category": "serif",
-      "visual": "Optimized for long reading — warm, familiar, and highly legible. Feels like a trusted book.",
-      "use_cases": ["longer quotes", "storytelling / narrative content"],
-      "avoid": ["bold headlines"]
-    },
-    {
-      "name": "Abril Fatface",
-      "file": "AbrilFatface-Regular.ttf",
-      "category": "display",
-      "visual": "Extremely high-contrast display serif with thick blacks and hairline whites. Dramatic and eye-catching.",
-      "use_cases": ["headline quotes", "bold statement posts", "fashion / luxury"],
-      "avoid": ["small text", "dense paragraphs"]
-    },
-    {
-      "name": "Anton",
-      "file": "Anton-Regular.ttf",
-      "category": "display",
-      "visual": "Tall, heavy sans with a bold, blocky presence. Reads as loud and confident.",
-      "use_cases": ["short punchy quotes", "bold statement posts", "sports / motivation"],
-      "avoid": ["elegant / refined layouts"]
-    },
-    {
-      "name": "Bebas Neue",
-      "file": "BebasNeue-Regular.ttf",
-      "category": "display",
-      "visual": "All-caps condensed sans with a poster / editorial feel. Striking and memorable.",
-      "use_cases": ["one-word / short quotes", "headline overlays"],
-      "avoid": ["lowercase-heavy text", "long paragraphs"]
-    },
-    {
-      "name": "JetBrains Mono",
-      "file": "JetBrainsMono-Regular.ttf",
-      "category": "monospace",
-      "visual": "Modern monospace with a tall x-height and clear glyphs. Reads as technical and precise.",
-      "use_cases": ["tech / coding quotes", "data / analytics themes"],
-      "avoid": ["warm / organic content"]
-    },
-    {
-      "name": "IBM Plex Mono",
-      "file": "IBMPlexMono-Regular.ttf",
-      "category": "monospace",
-      "visual": "Refined monospace with a slightly condensed width. Professional and clean.",
-      "use_cases": ["technical / enterprise quotes", "code snippets in text"],
-      "avoid": ["casual / playful content"]
-    },
-    {
-      "name": "Space Mono",
-      "file": "SpaceMono-Regular.ttf",
-      "category": "monospace",
-      "visual": "Bold, wide monospace with a retro-futuristic feel. Distinctive and memorable.",
-      "use_cases": ["futuristic / sci-fi themed quotes", "bold display"],
-      "avoid": ["small text"]
-    },
-    {
-      "name": "Caveat",
-      "file": "Caveat-Variable.ttf",
-      "category": "handwritten",
-      "visual": "Casual, natural handwriting with a friendly, personal feel. Like a note from a friend.",
-      "use_cases": ["personal / reflective quotes", "lifestyle / wellness content"],
-      "avoid": ["tech / formal themes"]
-    },
-    {
-      "name": "Dancing Script",
-      "file": "DancingScript-Variable.ttf",
-      "category": "handwritten",
-      "visual": "Elegant, flowing script with graceful curves. Feels celebratory and warm.",
-      "use_cases": ["inspirational quotes", "celebration / event content"],
-      "avoid": ["long text", "tech / formal themes"]
-    },
-    {
-      "name": "Great Vibes",
-      "file": "GreatVibes-Regular.ttf",
-      "category": "handwritten",
-      "visual": "Luxurious, flowing cursive with dramatic flourishes. Reads as premium and refined.",
-      "use_cases": ["elegant / wedding-style quotes", "luxury brand content"],
-      "avoid": ["bold / casual layouts"]
-    },
-    {
-      "name": "Allura",
-      "file": "Allura-Regular.ttf",
-      "category": "handwritten",
-      "visual": "Soft, romantic cursive with gentle curves. Feels intimate and personal.",
-      "use_cases": ["love / relationship quotes", "feminine / delicate layouts"],
-      "avoid": ["tech / masculine themes"]
-    },
-    {
-      "name": "Sacramento",
-      "file": "Sacramento-Regular.ttf",
-      "category": "handwritten",
-      "visual": "Light, flowing single-stroke script with a minimalist elegance. Subtle and refined.",
-      "use_cases": ["minimalist elegant quotes", "fashion / lifestyle"],
-      "avoid": ["bold / loud layouts"]
-    },
-    {
-      "name": "Pacifico",
-      "file": "Pacifico-Regular.ttf",
-      "category": "handwritten",
-      "visual": "Retro 1950s-inspired script with bold, friendly curves. Fun and approachable.",
-      "use_cases": ["casual / fun quotes", "food / travel content"],
-      "avoid": ["formal / professional themes"]
-    },
-    {
-      "name": "Parisienne",
-      "file": "Parisienne-Regular.ttf",
-      "category": "handwritten",
-      "visual": "Elegant, flowing French-inspired script with graceful curves. Romantic and refined.",
-      "use_cases": ["fashion / beauty quotes", "luxury brand content"],
-      "avoid": ["tech / casual themes"]
-    },
-    {
-      "name": "Playfair Display",
-      "file": "PlayfairDisplay-Variable.ttf",
-      "category": "serif",
-      "visual": "High-contrast editorial serif with dramatic thick-thin transitions. Bold, luxurious, and attention-grabbing.",
-      "use_cases": ["fashion / luxury quotes", "headline-style overlays", "bold statement posts"],
-      "avoid": ["small text", "dense paragraphs"]
-    },
-    {
-      "name": "Oswald",
-      "file": "Oswald-Variable.ttf",
-      "category": "display",
-      "visual": "Tall, condensed sans inspired by classic gothic letterforms. Strong and authoritative.",
-      "use_cases": ["headline quotes", "sports / motivation", "bold statement posts"],
-      "avoid": ["elegant / refined layouts"]
-    }
-  ]
+  "serif": {
+    "description": "Serif fonts have small strokes at letter ends; they read as classic, literary, editorial, and trustworthy. Best for quotes that feel timeless, profound, or luxurious.",
+    "fonts": [
+      {
+        "name": "Cormorant Garamond",
+        "file": "CormorantGaramond-Variable.ttf",
+        "bold_file": null,
+        "description": "High-contrast Garamond-inspired serif with very thin hairlines and tall, refined letterforms. Feels literary, luxurious, and expensive.",
+        "use_cases": "Luxury/fashion quote posts, romantic literary moods, editorial headlines. Use at large sizes (28px+); shine at xlarge.",
+        "avoid_cases": "Small text, casual/energetic moods, low-contrast busy backgrounds."
+      },
+      {
+        "name": "Playfair Display",
+        "file": "PlayfairDisplay-Variable.ttf",
+        "bold_file": null,
+        "description": "High-contrast Didone serif with dramatic thick-to-thin stroke transitions and elegant sharp serifs. Bold, luxurious, fashion-editorial.",
+        "use_cases": "Fashion/luxury headlines, bold statement posts, magazine-style overlays. Use at large sizes.",
+        "avoid_cases": "Small text, dense paragraphs, casual or playful moods."
+      },
+      {
+        "name": "DM Serif Display",
+        "file": "DMSerifDisplay-Regular.ttf",
+        "bold_file": null,
+        "description": "Confident display serif with strong contrast and crisp, sturdy serifs. Modern-editorial rather than antique: it commands attention without feeling old-fashioned.",
+        "use_cases": "Headline-style quotes, bold statement posts, lifestyle and modern-luxury brands.",
+        "avoid_cases": "Small text, formal/traditional ceremonies, dense body copy."
+      },
+      {
+        "name": "Libre Baskerville",
+        "file": "LibreBaskerville-Variable.ttf",
+        "bold_file": null,
+        "description": "Transitional serif based on Baskerville, optimized for screens: solid, evenly-weighted strokes with a warm, bookish authority. Very readable at medium sizes.",
+        "use_cases": "Longer quotes, classic literature/philosophy, education content, dark-bottom overlays.",
+        "avoid_cases": "Delicate/airy layouts, playful or youthful moods."
+      },
+      {
+        "name": "Lora",
+        "file": "Lora-Variable.ttf",
+        "bold_file": null,
+        "description": "Well-rounded serif with calligraphic brush-like curves and moderate contrast. Warm and approachable; bridges traditional and modern without shouting.",
+        "use_cases": "Personal/reflective quotes, wellness and mindfulness content, storytelling posts.",
+        "avoid_cases": "Tech/futuristic themes, loud statement headlines."
+      },
+      {
+        "name": "Crimson Text",
+        "file": "CrimsonText-Regular.ttf",
+        "bold_file": "CrimsonText-Bold.ttf",
+        "description": "Old-style serif modeled on classic book typography: compact, dense, and highly legible. Feels like a trusted printed page.",
+        "use_cases": "Longer quotes, narrative/storytelling content, classic literary moods.",
+        "avoid_cases": "Bold modern headlines, casual/social-media energy."
+      },
+      {
+        "name": "EB Garamond",
+        "file": "EBGaramond-Variable.ttf",
+        "bold_file": null,
+        "description": "Authentic Renaissance-era Garamond revival with genuinely historical letterforms and fine, even strokes. Reads like a 16th-century manuscript.",
+        "use_cases": "Classical quotes, heritage/tradition themes, academic and intellectual content.",
+        "avoid_cases": "Modern/tech vibes, short punchy social posts."
+      },
+      {
+        "name": "Spectral",
+        "file": "Spectral-Regular.ttf",
+        "bold_file": null,
+        "description": "Contemporary transitional serif designed by Production Type for screen-first long-form reading, rooted in French Elzevir tradition. Crisp, scholarly, and effortlessly elegant at any size.",
+        "use_cases": "Academic/intellectual quotes, editorial/magazine style, longer text that must stay readable.",
+        "avoid_cases": "Casual/fun content, loud display headlines."
+      }
+    ]
+  },
+  "sans-serif": {
+    "description": "Sans-serif fonts have no end strokes; they read as modern, clean, neutral, and trustworthy. Best for contemporary, minimalist, or tech-adjacent quotes.",
+    "fonts": [
+      {
+        "name": "Inter",
+        "file": "Inter-Variable.ttf",
+        "bold_file": null,
+        "description": "Ultra-neutral sans designed for screen readability with a tall x-height and balanced proportions. Almost invisible typography — lets the quote itself speak.",
+        "use_cases": "Minimalist designs, dark backgrounds, longer quotes needing clarity, data/analytics themes.",
+        "avoid_cases": "Warm/organic moods, decorative or expressive headlines."
+      },
+      {
+        "name": "Montserrat",
+        "file": "Montserrat-Variable.ttf",
+        "bold_file": null,
+        "description": "Geometric sans inspired by 1920s Buenos Aires signage: clean circular letterforms with a confident, slightly retro-modern feel. Versatile and friendly.",
+        "use_cases": "Modern editorial quotes, brand-style posts, motivational content, urban/lifestyle themes.",
+        "avoid_cases": "Formal/literary moods, delicate romantic layouts."
+      },
+      {
+        "name": "Poppins",
+        "file": "Poppins-Regular.ttf",
+        "bold_file": null,
+        "description": "Geometric sans built on circles: rounded terminals and even curves give it a soft, friendly, modern energy. Stands out without being loud.",
+        "use_cases": "Lifestyle/wellness quotes, youthful and positive content, playful-but-clean layouts.",
+        "avoid_cases": "Traditional/academic themes, serious or somber moods."
+      },
+      {
+        "name": "Raleway",
+        "file": "Raleway-Variable.ttf",
+        "bold_file": null,
+        "description": "Elegant, high-contrast sans inspired by Art Deco signage; thin weights feel luxurious and refined while bolder weights turn editorial.",
+        "use_cases": "Fashion/luxury quotes, elegant minimalist layouts, sophisticated brand posts.",
+        "avoid_cases": "Casual/fun content, dense paragraphs."
+      },
+      {
+        "name": "Work Sans",
+        "file": "WorkSans-Variable.ttf",
+        "bold_file": null,
+        "description": "Humanist grotesque designed for screen clarity: warm, open, and unobtrusive with excellent legibility even in longer blocks.",
+        "use_cases": "Longer quotes needing readability, education/how-to content, productivity and focus themes.",
+        "avoid_cases": "Bold display headlines, decorative or expressive posts."
+      }
+    ]
+  },
+  "monospace": {
+    "description": "Monospace fonts give every character equal width; they read as technical, precise, and retro-futuristic. Best for quotes about code, technology, or minimal data-driven moods.",
+    "fonts": [
+      {
+        "name": "JetBrains Mono",
+        "file": "JetBrainsMono-Variable.ttf",
+        "bold_file": null,
+        "description": "Modern monospace designed for code reading: tall x-height, clear distinguishable glyphs, slight square feel. Precise and developer-native.",
+        "use_cases": "Tech/coding quotes, developer humor, data/analytics themes, terminal aesthetic.",
+        "avoid_cases": "Warm/organic content, romantic or luxury moods."
+      },
+      {
+        "name": "IBM Plex Mono",
+        "file": "IBMPlexMono-Regular.ttf",
+        "bold_file": "IBMPlexMono-Bold.ttf",
+        "description": "Refined corporate monospace from IBM's design language: even color, slightly condensed, professional and calm. Feels engineered and trustworthy.",
+        "use_cases": "Technical/enterprise quotes, clean minimalist tech posts, code-adjacent content.",
+        "avoid_cases": "Casual/playful content, expressive headlines."
+      },
+      {
+        "name": "Space Mono",
+        "file": "SpaceMono-Regular.ttf",
+        "bold_file": null,
+        "description": "Bold, wide monospace with square dots over the i/j and angular cut terminals; a distinctive retro-futuristic vibe. Memorable and slightly quirky.",
+        "use_cases": "Futuristic/sci-fi themed quotes, bold display text, edgy tech posts.",
+        "avoid_cases": "Small text, formal or delicate layouts."
+      }
+    ]
+  },
+  "handwritten": {
+    "description": "Handwritten/script fonts mimic handwriting or calligraphy; they read as personal, human, warm, and emotional. Best for short quotes where feeling matters more than formality.",
+    "fonts": [
+      {
+        "name": "Great Vibes",
+        "file": "GreatVibes-Regular.ttf",
+        "bold_file": null,
+        "description": "High-contrast formal calligraphy script with dramatic swooping flourishes and elegant connecting strokes. Reads as premium, refined, and celebratory.",
+        "use_cases": "Elegant/wedding-style quotes, luxury brand content, short romantic lines. Keep it short.",
+        "avoid_cases": "Long text (legibility drops fast), bold/casual layouts, body copy."
+      },
+      {
+        "name": "Allura",
+        "file": "Allura-Regular.ttf",
+        "bold_file": null,
+        "description": "Casual handwriting script with simple, clean, very legible letterforms and soft formal curves. Elegant but more relaxed than Great Vibes — intimate rather than ceremonial.",
+        "use_cases": "Love/relationship quotes, feminine/delicate layouts, greeting-card moods, package-style branding.",
+        "avoid_cases": "Tech or masculine themes, long passages, dense layouts."
+      },
+      {
+        "name": "Parisienne",
+        "file": "Parisienne-Regular.ttf",
+        "bold_file": null,
+        "description": "Casual connecting script inspired by 1960s design: slight bounce and graceful, romantic strokes with ornate flourished uppercase. Playful yet elegant — French-chic.",
+        "use_cases": "Fashion/beauty quotes, boutique and bakery branding, wedding invites, quote graphics.",
+        "avoid_cases": "Tech/casual-loud themes, long sentences, small sizes."
+      },
+      {
+        "name": "Sacramento",
+        "file": "Sacramento-Regular.ttf",
+        "bold_file": null,
+        "description": "Monoline semi-connected script inspired by 1950s-60s hand-lettered brochures: uniform stroke width, tall and airy. Sits between formal and casual with real headline presence.",
+        "use_cases": "Minimalist elegant quotes, fashion/lifestyle posts, retro-vintage moods, short titles.",
+        "avoid_cases": "Bold/loud layouts, very small text."
+      },
+      {
+        "name": "Caveat",
+        "file": "Caveat-Variable.ttf",
+        "bold_file": null,
+        "description": "Casual, natural handwriting with a variable baseline like a marker note — letters dip and rise. Friendly, personal, and informal.",
+        "use_cases": "Personal/reflective quotes, lifestyle and wellness content, handwritten-note aesthetics.",
+        "avoid_cases": "Tech/formal themes, long paragraphs, luxury moods."
+      },
+      {
+        "name": "Dancing Script",
+        "file": "DancingScript-Variable.ttf",
+        "bold_file": null,
+        "description": "Casual connected script with bouncy letterforms and moderate contrast — joyful and celebratory, like animated handwriting.",
+        "use_cases": "Inspirational quotes, celebration/event content, warm positive posts.",
+        "avoid_cases": "Long text, tech/formal themes, somber subjects."
+      },
+      {
+        "name": "Pacifico",
+        "file": "Pacifico-Regular.ttf",
+        "bold_file": null,
+        "description": "Retro 1950s-60s rounded script with bold, friendly, chunky curves — evokes surf and soda-shop signage. Fun, warm, and approachable.",
+        "use_cases": "Casual/fun quotes, food/travel content, summery and retro moods.",
+        "avoid_cases": "Formal/professional themes, luxury or somber posts."
+      }
+    ]
+  },
+  "display": {
+    "description": "Display fonts are loud, high-impact faces made for headlines and short statements. Best for punchy one-liners that must grab attention immediately.",
+    "fonts": [
+      {
+        "name": "Anton",
+        "file": "Anton-Regular.ttf",
+        "bold_file": null,
+        "description": "Ultra-bold condensed sans with very tall, narrow, heavy letterforms. Loud, blocky, and impossible to ignore — pure poster impact.",
+        "use_cases": "Short punchy quotes, sports/motivation posts, bold statement headlines.",
+        "avoid_cases": "Long text, elegant/refined layouts, anything needing subtlety."
+      },
+      {
+        "name": "Bebas Neue",
+        "file": "BebasNeue-Regular.ttf",
+        "bold_file": null,
+        "description": "Tall, thin-stroked condensed sans designed for all-caps display: narrow uppercase letters with a clean poster/editorial feel. Striking and memorable.",
+        "use_cases": "Short all-caps quotes, one-liner headlines, fashion/urban posters.",
+        "avoid_cases": "Lowercase-heavy text, long paragraphs, romantic moods."
+      },
+      {
+        "name": "Abril Fatface",
+        "file": "AbrilFatface-Regular.ttf",
+        "bold_file": null,
+        "description": "Extremely high-contrast Didone display serif inspired by 19th-century advertising posters: heavy blacks with hairline serifs and clean curves. Dramatic and elegant at once.",
+        "use_cases": "Headline quotes, fashion/luxury statements, posters and packaging where type is the star.",
+        "avoid_cases": "Small text, dense paragraphs, casual moods."
+      },
+      {
+        "name": "Oswald",
+        "file": "Oswald-Variable.ttf",
+        "bold_file": null,
+        "description": "Tall condensed grotesque sans inspired by classic gothic letterforms (Alternate Gothic lineage). Compact, strong, and authoritative.",
+        "use_cases": "Headline quotes, sports/motivation, bold statement posts, newspaper-style headlines.",
+        "avoid_cases": "Elegant/refined layouts, long readable paragraphs."
+      }
+    ]
+  }
 }
