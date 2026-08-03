@@ -30,7 +30,7 @@ _ALLOWED = {
         "center", "middle-left", "middle-right",
     },
     "font_size": {"small", "medium", "large", "xlarge"},
-    "background_overlay": {"none", "dark-bottom", "light-top", "dark-center"},
+    "background_overlay": {"none", "dark-bottom", "light-top", "dark-center", "text-block", "text-block-dark", "text-block-light"},
     "text_effect": {"none", "shadow", "outline", "glow"},
     "font_weight": {"regular", "bold"},
 }

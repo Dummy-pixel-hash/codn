@@ -5,10 +5,13 @@ Bonsai-27B-Q1_0.gguf is used for prompt generation and text overlay work.
 
 import json
 import os
+import random
+import re
 import signal
 import subprocess
 import time
 import requests
+import database
 from config import LLAMA_MODEL_PATH, LLAMA_PORT, BASE_DIR
 from font_registry import FontRegistry
 
@@ -16,12 +19,102 @@ from font_registry import FontRegistry
 # (it only reads the small fonts.json manifest, never loads font files).
 _REGISTRY: FontRegistry | None = None
 
+# Curated real-quote pools (anime/movie). The local model can't reliably
+# recall attributed quotes, so known-source requests inject real ones instead.
+_QUOTES_CACHE: dict | None = None
+
 
 def _get_registry() -> FontRegistry:
     global _REGISTRY
     if _REGISTRY is None:
         _REGISTRY = FontRegistry()
     return _REGISTRY
+
+
+def _load_quotes() -> dict:
+    global _QUOTES_CACHE
+    if _QUOTES_CACHE is None:
+        path = os.path.join(str(BASE_DIR), "data", "quotes.json")
+        with open(path, encoding="utf-8") as fh:
+            _QUOTES_CACHE = json.load(fh)
+    return _QUOTES_CACHE
+
+
+def _normalise_query(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+
+
+def retrieve_quotes(category: str = "", theme: str = "", limit: int = 3) -> list[dict]:
+    """
+    Return real quotes when category/theme references a known anime/movie source.
+
+    Matching priority: exact source name, then character name, then containment
+    (longest matching source wins), then bare-category ("anime"/"movie") which
+    samples that pool. Quotes already used are skipped. Returns [] when nothing
+    is implied, so the model writes an original quote as before.
+    """
+    data = _load_quotes()
+    category = category or ""
+    theme = theme or ""
+    query = _normalise_query(f"{category} {theme}")
+    if not query:
+        return []
+
+    used = database.get_used_quote_keys()
+
+    def unused(entries: list[dict]) -> list[dict]:
+        return [e for e in entries if database.quote_key(e["quote"]) not in used]
+
+    pools = [("anime", data["anime"]), ("movie", data["movie"])]
+
+    # 1) Exact source-name match, e.g. theme="naruto" -> source "Naruto".
+    #    An exhausted source returns [] rather than falling through to a
+    #    different source's quotes, so attribution stays correct. Sibling
+    #    source names for the same series are still served by stage 3.
+    for _, pool in pools:
+        by_source: dict[str, list[dict]] = {}
+        for entry in pool:
+            by_source.setdefault(_normalise_query(entry["source"]), []).append(entry)
+        if query in by_source:
+            return unused(by_source[query])[:limit]
+
+    # 2) Character-name match against the theme (category alone rarely names a
+    #    character), e.g. theme="itachi" -> Itachi Uchiha's quotes.
+    theme_query = _normalise_query(theme)
+    if theme_query:
+        for _, pool in pools:
+            hits = [e for e in pool if theme_query in _normalise_query(e.get("character", ""))]
+            if hits:
+                return unused(hits)[:limit]
+
+    # 3) Containment: query inside a source name (or vice versa); longest source
+    #    wins so a request like "attack on titan" matches that series precisely.
+    best: list[tuple[int, list[dict]]] = []
+    for _, pool in pools:
+        by_source: dict[str, list[dict]] = {}
+        for entry in pool:
+            by_source.setdefault(_normalise_query(entry["source"]), []).append(entry)
+        for src, entries in by_source.items():
+            if src and (query in src or src in query):
+                fresh = unused(entries)
+                if fresh:
+                    best.append((len(src), fresh))
+    if best:
+        best.sort(key=lambda item: item[0], reverse=True)
+        return best[0][1][:limit]
+
+    # 4) Bare category: sample the whole pool.
+    generic = {
+        "anime": {"anime", "animes", "manga", "japanese animation"},
+        "movie": {"movie", "movies", "film", "films", "cinema"},
+    }
+    for pool_key, aliases in generic.items():
+        if _normalise_query(category) in aliases:
+            fresh = unused(data[pool_key])
+            if fresh:
+                return random.sample(fresh, min(limit, len(fresh)))
+
+    return []
 
 
 def start_llama():
@@ -167,10 +260,20 @@ def generate_text_overlay(
     if theme:
         context.append(f"User theme: {theme}")
 
+    recalled = retrieve_quotes(category, theme)
+    if recalled:
+        lines = ["Real quotes from the requested source (pick one verbatim):"]
+        for i, quote_entry in enumerate(recalled, 1):
+            attribution = quote_entry["source"]
+            if quote_entry.get("character"):
+                attribution = f"{quote_entry['character']} — {attribution}"
+            lines.append(f'{i}. "{quote_entry["quote"]}" — {attribution}')
+        context.append("\n".join(lines))
+
     body = {
         "model": "Bonsai-27B",
         "messages": [
-            {"role": "system", "content": build_overlay_system_prompt()},
+            {"role": "system", "content": build_overlay_system_prompt(recalled or None)},
             {
                 "role": "user",
                 "content": "\n".join(context)
@@ -188,11 +291,23 @@ def generate_text_overlay(
             if r.status_code == 200:
                 data = r.json()
                 text = data["choices"][0]["message"]["content"].strip()
-                return _parse_overlay_response(text)
+                parsed = _parse_overlay_response(text)
+                if recalled:
+                    _mark_quote_used(parsed.get("quote", ""), recalled)
+                return parsed
         except Exception as e:
             print(f"[llama] generate_text_overlay attempt {attempt+1} failed: {e}")
             time.sleep(2)
     raise RuntimeError("Failed to generate text overlay after 3 attempts")
+
+
+def _mark_quote_used(picked_quote: str, recalled: list[dict]) -> None:
+    """Record the recalled quote the model picked so it isn't offered again."""
+    picked_key = database.quote_key(picked_quote)
+    for entry in recalled:
+        if database.quote_key(entry["quote"]) == picked_key:
+            database.save_quote(entry["quote"])
+            return
 
 
 def generate_caption(
@@ -284,37 +399,62 @@ def format_caption(
 
 
 def _build_art_prompt(system_prompt: str = None) -> str:
-    return f"""Generate one self-contained prompt for a square Instagram image.
+    return f"""Generate one self-contained image prompt for a square Instagram post.
+
+Write it in flowing full sentences, 60-120 words, following this order:
+subject → art style & medium → lighting → composition & camera → mood & color palette → detail & texture.
 
 Rules:
-- Output ONLY the prompt text, nothing else
-- No markdown, no backticks, no quotes around it
-- Describe one clear focal subject, one supporting environment, a restrained color palette, lighting, camera or art style, and composition
-- Make the subject large enough to read at thumbnail size and place it off-center
-- Reserve one clean, low-detail area for a later quote overlay; explicitly say where that area is
+- Output ONLY the prompt text, nothing else; no markdown, no backticks, no quotes around it
+- Lead with the subject and its specific attributes; keep the remaining sections in the order above
+- Always name a concrete art style and medium; if the brief names a style (anime, cyberpunk, noir, watercolor, etc.), commit to it with 2-3 signature descriptors of that style
+- If the subject is a character or person: they must NOT look directly at the viewer — use a three-quarter view looking away, a profile, a distant gaze, closed eyes, or a view from behind; if facing forward is unavoidable, add soft focus or shallow depth of field
+- Describe lighting explicitly (source + quality), composition (framing, angle, lens), and a restrained color palette
+- Reserve one clean, low-detail area (name its location) for a later quote overlay — plain empty space such as soft sky, a smooth wall, or out-of-focus background, never a frame, board, screen, or sign
 - Do not include words, letters, typography, logos, signatures, watermarks, borders, or UI elements in the artwork
+- Avoid objects that tend to render with writing: books or papers with visible covers/pages, posters, signs, billboards, graffiti, murals, screens or displays, headbands with metal plates, printed clothing, name tags, banners
 - Avoid stacking unrelated symbols or multiple competing focal subjects
 
 {f"Creative brief: {system_prompt}" if system_prompt else "Creative brief: an introspective, editorial mood with a memorable visual metaphor."}"""
 
 
-def build_overlay_system_prompt() -> str:
-    """Build the overlay system prompt, injecting condensed font descriptions."""
+def build_overlay_system_prompt(recalled_quotes: list[dict] | None = None) -> str:
+    """Build the overlay system prompt, injecting condensed font descriptions.
+
+    When `recalled_quotes` is provided, the model must pick one of those real
+    quotes verbatim instead of writing an original line.
+    """
     font_guide = _get_registry().build_prompt_text(max_chars=2000)
+    if recalled_quotes:
+        quote_rule = """Real quotes from the requested source are listed in the user message. Choose the ONE that best fits this artwork and repeat it VERBATIM — exact wording, punctuation, and capitalization. Do not reword, shorten, or "improve" it.
+
+Author attribution rules:
+- Set "author" to the source of the chosen quote exactly as given (e.g. "Spirited Away", "Naruto"). When the listing also names a character, use "Character — Source" (e.g. "Itachi Uchiha — Naruto"). Never invent or alter the attribution."""
+        quote_field = '- "quote": the chosen real quote, copied word for word from the list'
+    else:
+        quote_rule = """Write one original quote inspired by the supplied art direction. The quote must be specific and emotionally clear, not a generic motivational cliché. Use 8-16 words, one sentence, and no more than 2 short lines when rendered.
+
+Author attribution rules:
+- When the art direction or content category references a known source — an anime, film, book, character, or person — set "author" to that source (e.g. "Spirited Away", "Naruto", "Rumi"). Always credit the source when one is implied.
+- Set "author" to an empty string ONLY when the quote is genuinely original writing with no attributable source."""
+        quote_field = '- "quote": one original, impactful sentence (8-16 words)'
+
     return f"""You are an art director creating a premium, readable Instagram quote post.
 
-Write one original quote inspired by the supplied art direction. The quote must be
-specific and emotionally clear, not a generic motivational cliché. Use 8-16 words,
-one sentence, and no more than 2 short lines when rendered. Do not invent a real
-person's words: set author to an empty string for an original quote.
+{quote_rule}
 
 Available fonts (pick the specific "font" name; "font_style" is its category):
 
 {font_guide}
 
+Style the text to complement the artwork, not fight it:
+- Match the visual mood of the image: an anime or neon artwork should get a font, color, and effect that fit that aesthetic (e.g. a display or handwritten font with an accent color pulled from the art) — never default to plain white on colorful art
+- Choose text_color that contrasts with the art's background area so the quote stays readable
+- Prefer medium font size and subtle effects (shadow or none) unless the art style calls for more
+
 Output a JSON object with:
-- "quote": one original, impactful sentence (8-16 words)
-- "author": an empty string for original writing; only use a source when explicitly provided
+{quote_field}
+- "author": the source (anime/film/book/person) when one is implied, otherwise an empty string
 - "font_style": font category from: "serif", "sans-serif", "monospace", "handwritten", "display"
 - "font": one specific font name from the list above (e.g. "Cormorant Garamond")
 - "font_weight": "regular" or "bold"
@@ -324,14 +464,14 @@ Output a JSON object with:
 - "x_offset": signed percentage (-15 to 15) fine-tuning horizontal placement from the anchor; 0 = default
 - "y_offset": signed percentage (-15 to 15) fine-tuning vertical placement from the anchor; 0 = default
 - "font_size": relative size: "small", "medium", "large", "xlarge"
-- "background_overlay": readability backdrop: "none", "dark-bottom", "light-top", "dark-center" — use a subtle backdrop when needed
+- "background_overlay": readability backdrop: "none", "dark-bottom", "light-top", "dark-center", or "text-block"; use a gradient backdrop for subtle separation, or "text-block" (semi-transparent dark/light rounded rectangle behind the text) when the art is busy or colorful and the quote needs maximum separation
 - "text_effect": text treatment: "none", "shadow", "outline", "glow" — prefer a subtle shadow when needed
 - "glow_color": hex color used when text_effect is "glow" (e.g. "#FFD700")
 - "text_gradient_from" / "text_gradient_to": hex colors for a vertical gradient fill; omit or use "" for solid color
 - "letter_spacing": pixels between letters, 0 to 10; 0 = normal
 
 Choose a position that avoids the main subject described in the art direction.
-Prefer medium font size and subtle effects. Output ONLY valid JSON. No explanations, no markdown."""
+Output ONLY valid JSON. No explanations, no markdown."""
 
 
 def _parse_overlay_response(text: str) -> dict:
@@ -359,18 +499,25 @@ def _normalise_overlay(data: dict) -> dict:
     return _get_registry().validate(data)
 
 
-_ART_SYSTEM = """You are a creative art prompt generator for professional Instagram content.
+_ART_SYSTEM = """You are a creative art director and professional image-prompt engineer for premium Instagram content.
 
-Generate prompts that would produce stunning, professional-looking images. Think about:
-- Art styles (digital painting, oil painting, watercolor, photography, surrealism, minimalism, etc.)
-- Color palettes and moods
-- Lighting and atmosphere
-- Composition and visual impact
-- Subjects and themes
-- A quote caption will be overlaid on the image later, so keep some part of the composition open and uncluttered — balanced negative space anywhere in the frame (not necessarily at the bottom) — so the text can sit anywhere without covering the focal point
-- Never include anything in the prompt that would require the image model to render text: no words, phrases, letters, typography, signage, banners, posters, labels, captions, logos, watermarks, or UI elements. The artwork itself must be text-free; any text is added later by the overlay system
+Write image prompts using this six-part structure, in order:
+1. SUBJECT: who/what is in the frame, with specific attributes (age, clothing, materials, expression, posture)
+2. STYLE & MEDIUM: always name a concrete art style and medium (cel-shaded anime key visual, painterly digital illustration, cinematic photography on 35mm film, watercolor concept art, noir pencil sketch). When the brief names a style — anime, cyberpunk, surrealism — commit to it fully with its signature visual language (e.g. anime: bold linework, cel shading, expressive eyes, painterly backgrounds); never fall back to a generic look
+3. LIGHTING: describe lighting as a rig (key light direction + softness, fill level, rim/back light) — e.g., "soft key from camera-left through diffusion, low fill creating sculpted shadows, subtle rim outlining shoulders"; plus scenarios like golden hour, neon rim light, soft diffused window light, volumetric god rays, dramatic chiaroscuro
+4. COMPOSITION & CAMERA: framing (wide/medium/close-up), angle (eye-level, slightly elevated, low angle looking up), explicit composition rules (rule of thirds, leading lines, negative space placement, foreground/midground/background layering), and specific lens/camera specs (85mm for portraits at f/2.8 for moderate blur, 35mm for environmental context, 50mm for natural perspective, or macro for extreme detail)
+5. MOOD & COLOR: emotional tone plus color grading direction (teal and orange, bleach bypass, warm grade, desaturated) and a named palette with precise hex references where relevant (e.g., #FFD700, #E91E63) or named combinations (warm amber and teal, muted pastel, high-contrast noir); specify exactly where each color lives in the frame
+6. DETAIL & TEXTURE: surface/material detail (film grain, visible brush strokes, glass reflections, fabric weave), plus atmospheric depth cues (volumetric haze catching highlights, distant elements softly blurred, dust motes in sunbeams). Never use cliché quality tokens like "masterpiece, 8k, hyperrealistic"
 
-The prompt should be detailed enough to guide an AI image generator toward a professional result. Make it specific and vivid."""
+Hard rules:
+- If the brief requests a specific aesthetic, commit to it with 2-3 signature style descriptors. A generic photo-like render of an anime request is a failure.
+- When a character appears, they must NOT look directly at the viewer. Use "three-quarter view looking away", "profile facing left", "gazing into the distance", "eyes closed in quiet reflection", or "seen from behind". If the subject must face forward, specify "soft focus on the face" or "shallow depth of field, face gently out of focus".
+- Neon or glow must be tasteful and restrained: rim lighting, reflections on wet surfaces, a limited palette of 2-3 glow colors. Never a flat wall of saturated neon.
+- Reserve one clean, low-detail area — name its location (upper third, left third, lower band) — for a later quote overlay; the text must never fight the focal point. The reserved area must be plain empty space (soft sky, smooth wall, out-of-focus background, shadowed ground), never a frame, board, screen, sign, or any object.
+- Never include text or anything that carries text: no words, letters, typography, signage, banners, posters, labels, captions, logos, watermarks, or UI elements. Also avoid objects that image models instinctively fill with writing: no books, magazines, newspapers, or loose papers with visible covers or pages; no billboards, neon signs, storefront signs, graffiti, murals, or scrolls with markings; no headbands with metal plates, printed t-shirts, name tags, screens, or displays. The artwork must be text-free; text is added later by the overlay system.
+- One clear focal subject, off-center, large enough to read at thumbnail size. No competing focal subjects, no collages, no stacked symbols.
+
+Write 60-120 words in flowing full sentences (the target generator is Flux — it reads natural language, not comma-tag soup). Make it specific and vivid."""
 
 
 _CAPTION_SYSTEM = """You are a social media caption writer for a professional Instagram quote page.

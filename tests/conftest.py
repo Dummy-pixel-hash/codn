@@ -4,10 +4,18 @@ import sys
 from pathlib import Path
 
 import pytest
+import database
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+
+@pytest.fixture(autouse=True)
+def _isolate_quote_db(monkeypatch):
+    """Keep tests independent of the live quotes.db state."""
+    monkeypatch.setattr(database, "get_used_quote_keys", lambda *a, **k: set())
+    monkeypatch.setattr(database, "save_quote", lambda *a, **k: None)
 
 
 @pytest.fixture

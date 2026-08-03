@@ -120,7 +120,7 @@ def add_text_overlay(image_path: str, output_path: str, style: dict) -> str:
     gradient_to = style.get("text_gradient_to", "")
     letter_spacing = style.get("letter_spacing", 0)
 
-    if overlay != "none":
+    if overlay != "none" and overlay not in ("text-block", "text-block-dark", "text-block-light"):
         img = _draw_bg_overlay(img, overlay)
 
     draw = ImageDraw.Draw(img)
@@ -154,10 +154,44 @@ def add_text_overlay(image_path: str, output_path: str, style: dict) -> str:
     if author:
         author_font = ImageFont.truetype(font_path, max(int(font_size * 0.7), 12))
         author_line = f"— {author}"
-        bbox = draw.textbbox((0, 0), author_line, font=author_font)
-        author_height = bbox[3] - bbox[1]
+        author_bbox = draw.textbbox((0, 0), author_line, font=author_font)
+        author_height = author_bbox[3] - author_bbox[1]
 
     block_height = len(quote_lines) * line_height + (author_height + 10 if author_line else 0)
+
+    # Calculate the full bounding box of all text for background overlay.
+    all_text = "\n".join(quote_lines)
+    if author_line:
+        all_text += "\n" + author_line
+    all_bboxes = [draw.textbbox((0, 0), line, font=font if line != author_line else author_font) for line in (quote_lines + ([author_line] if author_line else []))]
+    # Compute the union bounding box of all lines.
+    left = min(b[0] for b in all_bboxes)
+    top = min(b[1] for b in all_bboxes)
+    right = max(b[2] for b in all_bboxes)
+    bottom = max(b[3] for b in all_bboxes)
+
+    # If a text-block overlay is requested, draw a semi-transparent rounded
+    # rectangle behind the entire text block before rendering.
+    if overlay in ("text-block", "text-block-dark", "text-block-light"):
+        pad_x = int(w * 0.04)
+        pad_y = int(block_height * 0.15)
+        pad_x = max(pad_x, 8)
+        pad_y = max(pad_y, 6)
+        rx = min(int(w * 0.03), 24)  # corner radius
+        # Clamp to image bounds.
+        x0 = max(0, left - pad_x)
+        y0 = max(0, top - pad_y)
+        x1 = min(w, right + pad_x)
+        y1 = min(h, bottom + pad_y)
+        if x1 > x0 and y1 > y0:
+            bg_img = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
+            bg_draw = ImageDraw.Draw(bg_img)
+            if overlay == "text-block-light":
+                fill_color = (255, 255, 255, int(200 * 0.65))  # ~65% opacity white
+            else:
+                fill_color = (0, 0, 0, int(200 * 0.55))  # ~55% opacity black
+            bg_draw.rounded_rectangle([(0, 0), (x1 - x0 - 1, y1 - y0 - 1)], radius=rx, fill=fill_color)
+            img.paste(bg_img, (x0, y0), bg_img)
 
     top_anchors = {"top", "top-left", "top-right"}
     bottom_anchors = {"bottom", "bottom-left", "bottom-right"}
@@ -267,7 +301,9 @@ def _draw_text_with_effect(
     glow_color: str = "#FFD700",
 ) -> None:
     if effect == "shadow":
-        draw.text((xy[0] + 3, xy[1] + 3), text, font=font, fill=(0, 0, 0, 180))
+        # Multi-pass shadow for deeper, more visible separation.
+        for dx, dy in ((-2, -2), (2, -2), (-2, 2), (2, 2), (0, -3), (0, 3), (-3, 0), (3, 0)):
+            draw.text((xy[0] + dx, xy[1] + dy), text, font=font, fill=(0, 0, 0, 140))
         draw.text(xy, text, font=font, fill=fill)
     elif effect == "outline":
         draw.text(
@@ -275,7 +311,7 @@ def _draw_text_with_effect(
             text,
             font=font,
             fill=fill,
-            stroke_width=max(2, font.size // 14),
+            stroke_width=max(3, font.size // 10),
             stroke_fill=(0, 0, 0, 255),
         )
     elif effect == "glow":
@@ -332,7 +368,8 @@ def _draw_gradient_text(
     if effect == "shadow":
         shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
         shadow_draw = ImageDraw.Draw(shadow)
-        shadow_draw.text((xy[0] + 3, xy[1] + 3), text, font=font, fill=(0, 0, 0, 180))
+        for dx, dy in ((-2, -2), (2, -2), (-2, 2), (2, 2), (0, -3), (0, 3), (-3, 0), (3, 0)):
+            shadow_draw.text((xy[0] + dx, xy[1] + dy), text, font=font, fill=(0, 0, 0, 140))
         img.alpha_composite(shadow)
     elif effect == "outline":
         outline = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -342,7 +379,7 @@ def _draw_gradient_text(
             text,
             font=font,
             fill=(0, 0, 0, 255),
-            stroke_width=max(2, font.size // 14),
+            stroke_width=max(3, font.size // 10),
             stroke_fill=(0, 0, 0, 255),
         )
         img.alpha_composite(outline)

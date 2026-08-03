@@ -101,7 +101,48 @@ def test_art_system_forbids_text_in_artwork():
     sys_msg = llama_manager._ART_SYSTEM
     for forbidden in ("letters", "typography", "banners", "watermarks"):
         assert forbidden in sys_msg
-    assert "render text" in sys_msg
+    assert "text-free" in sys_msg
+
+
+def test_art_system_forbids_direct_gaze():
+    sys_msg = llama_manager._ART_SYSTEM
+    assert "NOT look directly at the viewer" in sys_msg
+    assert "three-quarter view" in sys_msg
+    assert "seen from behind" in sys_msg
+
+
+def test_art_system_requires_style_commitment():
+    sys_msg = llama_manager._ART_SYSTEM
+    assert "commit to it fully" in sys_msg
+    assert "signature visual language" in sys_msg
+    assert "anime" in sys_msg
+
+
+def test_art_system_tasteful_neon():
+    sys_msg = llama_manager._ART_SYSTEM
+    assert "tasteful and restrained" in sys_msg
+    assert "Never a flat wall of saturated neon" in sys_msg
+
+
+def test_build_art_prompt_six_part_structure():
+    p = llama_manager._build_art_prompt("anime quote art")
+    for part in ("subject → art style & medium", "composition & camera", "mood & color palette"):
+        assert part in p
+    assert "must NOT look directly at the viewer" in p
+    assert "commit to it with 2-3 signature descriptors" in p
+
+
+def test_overlay_prompt_credits_source():
+    p = llama_manager.build_overlay_system_prompt()
+    assert "set \"author\" to that source" in p
+    assert "Spirited Away" in p
+    assert "empty string ONLY when the quote is genuinely original" in p
+
+
+def test_overlay_prompt_style_matches_art():
+    p = llama_manager.build_overlay_system_prompt()
+    assert "Match the visual mood of the image" in p
+    assert "never default to plain white on colorful art" in p
 
 
 def test_parse_caption_response_valid():
@@ -183,3 +224,136 @@ def test_generate_caption_no_trending_no_line(monkeypatch):
 
 def test_caption_system_mentions_trending_usage():
     assert "Currently trending searches" in llama_manager._CAPTION_SYSTEM
+
+
+def test_retrieve_quotes_exact_source_match():
+    quotes = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    assert 1 <= len(quotes) <= 3
+    assert all(q["source"] == "Naruto" for q in quotes)
+
+
+def test_retrieve_quotes_character_match():
+    quotes = llama_manager.retrieve_quotes(category="anime", theme="itachi")
+    assert quotes
+    assert all("Itachi" in q.get("character", "") for q in quotes)
+
+
+def test_retrieve_quotes_movie_match():
+    quotes = llama_manager.retrieve_quotes(category="movie", theme="the godfather")
+    assert 1 <= len(quotes) <= 3
+    assert all("Godfather" in q["source"] for q in quotes)
+
+
+def test_retrieve_quotes_containment_match():
+    quotes = llama_manager.retrieve_quotes(category="anime", theme="attack on titan")
+    assert quotes
+    assert all("Attack on Titan" in q["source"] for q in quotes)
+
+
+def test_retrieve_quotes_no_match_returns_empty():
+    quotes = llama_manager.retrieve_quotes(category="philosophy", theme="stoicism")
+    assert quotes == []
+
+
+def test_retrieve_quotes_bare_category_returns_pool():
+    quotes = llama_manager.retrieve_quotes(category="anime", theme="")
+    assert 1 <= len(quotes) <= 3
+    assert all(q.get("source") for q in quotes)
+
+
+def test_retrieve_quotes_none_values_safe():
+    quotes = llama_manager.retrieve_quotes(category=None, theme=None)
+    assert quotes == []
+
+
+def test_retrieve_quotes_skips_used(monkeypatch):
+    naruto = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    assert naruto
+    used_key = llama_manager.database.quote_key(naruto[0]["quote"])
+    monkeypatch.setattr(
+        llama_manager.database, "get_used_quote_keys", lambda *a, **k: {used_key}
+    )
+    quotes = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    assert quotes
+    assert all(llama_manager.database.quote_key(q["quote"]) != used_key for q in quotes)
+
+
+def test_retrieve_quotes_exhausted_source_returns_empty(monkeypatch):
+    naruto = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    assert naruto
+    used_keys = {llama_manager.database.quote_key(q["quote"]) for q in naruto}
+    monkeypatch.setattr(
+        llama_manager.database, "get_used_quote_keys", lambda *a, **k: used_keys
+    )
+    quotes = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    assert quotes == []
+
+
+def test_mark_quote_used_records_picked(monkeypatch):
+    saved = []
+    monkeypatch.setattr(llama_manager.database, "save_quote", lambda q: saved.append(q))
+    recalled = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    llama_manager._mark_quote_used(recalled[0]["quote"], recalled)
+    assert saved == [recalled[0]["quote"]]
+
+
+def test_mark_quote_used_ignores_unrelated(monkeypatch):
+    saved = []
+    monkeypatch.setattr(llama_manager.database, "save_quote", lambda q: saved.append(q))
+    recalled = llama_manager.retrieve_quotes(category="anime", theme="naruto")
+    llama_manager._mark_quote_used("A totally original line.", recalled)
+    assert saved == []
+
+
+def test_overlay_prompt_verbatim_when_quotes_supplied():
+    prompt = llama_manager.build_overlay_system_prompt(
+        [{"quote": "Test.", "source": "Naruto", "character": "Itachi Uchiha"}]
+    )
+    assert "VERBATIM" in prompt
+    assert "Real quotes from the requested source" in prompt
+    assert "Write one original quote" not in prompt
+
+
+def test_overlay_prompt_default_still_original():
+    prompt = llama_manager.build_overlay_system_prompt()
+    assert "Write one original quote" in prompt
+
+
+class _FakeOverlayResponse:
+    status_code = 200
+
+    def json(self):
+        return {"choices": [{"message": {"content": '{"quote": "Q.", "author": "Naruto"}'}}]}
+
+
+def test_generate_text_overlay_includes_real_quotes(monkeypatch):
+    captured = {}
+
+    def fake_post(url, json=None, timeout=None):
+        captured["body"] = json
+        return _FakeOverlayResponse()
+
+    monkeypatch.setattr(llama_manager.requests, "post", fake_post)
+    llama_manager.generate_text_overlay(
+        None, "/tmp/img.png", art_prompt="", category="anime", theme="naruto"
+    )
+    user_msg = captured["body"]["messages"][1]["content"]
+    system_msg = captured["body"]["messages"][0]["content"]
+    assert "Real quotes from the requested source" in user_msg
+    assert "— Naruto" in user_msg
+    assert "VERBATIM" in system_msg
+
+
+def test_generate_text_overlay_no_quotes_for_unknown(monkeypatch):
+    captured = {}
+
+    def fake_post(url, json=None, timeout=None):
+        captured["body"] = json
+        return _FakeOverlayResponse()
+
+    monkeypatch.setattr(llama_manager.requests, "post", fake_post)
+    llama_manager.generate_text_overlay(
+        None, "/tmp/img.png", art_prompt="", category="philosophy", theme="stoicism"
+    )
+    user_msg = captured["body"]["messages"][1]["content"]
+    assert "Real quotes from the requested source" not in user_msg

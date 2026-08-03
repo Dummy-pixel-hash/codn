@@ -106,11 +106,15 @@ def generate_art(prompt: str, output_dir: Path = OUTPUT_DIR) -> str | None:
     workflow["6"]["inputs"]["value"] = prompt
 
     # The quote is rendered by Pillow later. Suppressing generated typography
-    # avoids malformed letters, logos, and watermarks competing with it.
+    # avoids malformed letters, logos, and watermarks competing with it. The
+    # object list targets the carriers image models fill with gibberish text
+    # (book covers, signs, headband plates) even when no text is requested.
     if "5" in workflow:
         workflow["5"]["inputs"]["text"] = (
             "text, letters, words, typography, logo, watermark, signature, "
-            "caption, border, frame, UI, duplicate subject, collage"
+            "caption, border, frame, UI, book cover, book pages, poster, sign, "
+            "billboard, graffiti, screen, display, headband plate, kanji, "
+            "gibberish writing, nonsense symbols, duplicate subject, collage"
         )
 
     # Randomize seed for variety
