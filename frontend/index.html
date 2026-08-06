@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>codn — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">codn</span>
+      </div>
+      <div class="sidebar-nav">
+        <button class="nav-link active" data-section="dashboard" aria-label="Dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-link" data-section="quotes" aria-label="Quotes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+          <span>Quotes</span>
+        </button>
+        <button class="nav-link" data-section="history" aria-label="History">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          <span>History</span>
+        </button>
+        <button class="nav-link" data-section="settings" aria-label="Settings">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <div class="status-dot online"></div>
+        <span class="status-text">Connected</span>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="section active">
+        <header class="section-header">
+          <div style="display:flex;align-items:center;gap:12px">
+            <h1>Dashboard</h1>
+            <span id="prompts-counter" class="prompt-counter">—</span>
+          </div>
+          <p class="section-subtitle">Monitor your pipeline and start generating.</p>
+        </header>
+
+        <!-- Pipeline Status -->
+        <div class="status-grid">
+          <div class="status-card">
+            <div class="status-card-header">
+              <span class="status-label">LLaMA Server</span>
+              <span class="status-indicator online" data-status="llama"></span>
+            </div>
+            <div class="status-card-body">
+              <span class="status-detail">port 8001</span>
+              <span class="status-model">Bonsai-27B-Q1_0</span>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-card-header">
+              <span class="status-label">ComfyUI</span>
+              <span class="status-indicator idle" data-status="comfy"></span>
+            </div>
+            <div class="status-card-body">
+              <span class="status-detail">Flux-2 Klein 4B FP8</span>
+              <span class="status-model">1024×1024</span>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-card-header">
+              <span class="status-label">Tunnel</span>
+              <span class="status-indicator online" data-status="tunnel"></span>
+            </div>
+            <div class="status-card-body">
+              <span class="status-detail" id="tunnel-url">https://ngrok-url.ngrok.io</span>
+              <span class="status-engine">ngrok</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate Section -->
+        <div class="generate-zone">
+          <div class="generate-header">
+            <h2>Generate Quote Art</h2>
+            <p class="generate-subtitle">Pick a category or let the pipeline choose.</p>
+          </div>
+          <div class="generate-form">
+            <div class="form-row">
+              <label class="form-label" for="theme-select">Category</label>
+              <select id="theme-select" class="form-select">
+                <option value="">Random (pick from all)</option>
+                <option value="philosophy">Philosophy</option>
+                <option value="anime">Anime</option>
+                <option value="literature">Literature</option>
+                <option value="literary">Literary</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="theme-input">Theme constraint (optional)</label>
+              <input id="theme-input" type="text" class="form-input" placeholder="e.g. sunset, cyberpunk, minimal">
+            </div>
+            <div class="form-row form-row-checkbox">
+              <label class="checkbox-label" for="upload-toggle">
+                <input id="upload-toggle" type="checkbox" checked>
+                Upload to Instagram after generation
+              </label>
+            </div>
+            <button id="generate-btn" class="btn btn-primary btn-lg">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Start Generation
+            </button>
+          </div>
+
+          <!-- Progress Tracker -->
+          <div id="progress-tracker" class="progress-tracker hidden">
+            <div class="progress-header">
+              <span class="progress-title">Generation in progress</span>
+              <button id="cancel-gen" class="btn btn-sm btn-ghost">Cancel</button>
+            </div>
+            <div class="phase-steps">
+              <div class="phase-step active" data-phase="art-prompt">
+                <span class="phase-num">1</span>
+                <span class="phase-label">Art prompt</span>
+                <span class="phase-status">generating...</span>
+              </div>
+              <div class="phase-step" data-phase="art-gen">
+                <span class="phase-num">2</span>
+                <span class="phase-label">Art generation</span>
+                <span class="phase-status">waiting</span>
+              </div>
+              <div class="phase-step" data-phase="text-overlay">
+                <span class="phase-num">3</span>
+                <span class="phase-label">Text overlay</span>
+                <span class="phase-status">waiting</span>
+              </div>
+              <div class="phase-step" data-phase="upload">
+                <span class="phase-num">4</span>
+                <span class="phase-label">Instagram upload</span>
+                <span class="phase-status">waiting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+          <h3>Recent Activity</h3>
+          <div class="activity-list">
+            <div class="activity-item success">
+              <span class="activity-badge success">✓ Success</span>
+              <span class="activity-time">2 minutes ago</span>
+              <span class="activity-desc">Category: anime — Quote #1847</span>
+            </div>
+            <div class="activity-item error">
+              <span class="activity-badge error">✗ Failed</span>
+              <span class="activity-time">15 minutes ago</span>
+              <span class="activity-desc">Category: philosophy — Quote #923 — Connection timeout</span>
+            </div>
+            <div class="activity-item success">
+              <span class="activity-badge success">✓ Success</span>
+              <span class="activity-time">1 hour ago</span>
+              <span class="activity-desc">Category: literature — Quote #2104</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quotes Section -->
+      <section id="quotes" class="section">
+        <header class="section-header">
+          <h1>Quotes</h1>
+          <p class="section-subtitle">Browse, search, and manage your quote library.</p>
+        </header>
+
+        <!-- Search & Filters -->
+        <div class="quotes-toolbar">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input id="quote-search" type="text" class="form-input search-input" placeholder="Search quotes...">
+          </div>
+          <div class="filter-group">
+            <select id="category-filter" class="form-select sm">
+              <option value="">All categories</option>
+              <option value="philosophy">Philosophy</option>
+              <option value="anime">Anime</option>
+              <option value="literature">Literature</option>
+              <option value="literary">Literary</option>
+              <option value="general">General</option>
+            </select>
+            <button class="btn btn-sm btn-ghost" id="add-quote-btn">+ Add Quote</button>
+          </div>
+        </div>
+
+        <!-- Quotes Grid -->
+        <div class="quotes-grid" id="quotes-grid"></div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="quotes-pagination">
+          <button class="btn btn-sm btn-ghost" disabled>← Previous</button>
+          <span class="page-info">No quotes yet</span>
+          <button class="btn btn-sm btn-ghost" disabled>Next →</button>
+        </div>
+      </section>
+
+      <!-- History Section -->
+      <section id="history" class="section">
+        <header class="section-header">
+          <h1>Generation History</h1>
+          <p class="section-subtitle">Past outputs and their status.</p>
+        </header>
+
+        <!-- History Filters -->
+        <div class="history-toolbar">
+          <select id="status-filter" class="form-select sm">
+            <option value="">All statuses</option>
+            <option value="success">Success</option>
+            <option value="error">Failed</option>
+          </select>
+          <button class="btn btn-sm btn-ghost" id="export-btn">Export CSV</button>
+        </div>
+
+        <!-- History Grid -->
+        <div class="history-grid" id="history-grid"></div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings" class="section">
+        <header class="section-header">
+          <h1>Settings</h1>
+          <p class="section-subtitle">Configure your pipeline and integrations.</p>
+        </header>
+
+        <!-- Pipeline Config -->
+        <div class="settings-group">
+          <h3>Pipeline</h3>
+          <div class="form-row">
+            <label class="form-label" for="llama-port">LLaMA Server Port</label>
+            <input id="llama-port" type="number" class="form-input sm" value="8001">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="comfy-port">ComfyUI Port</label>
+            <input id="comfy-port" type="number" class="form-input sm" value="8188">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="model-path">Model Path</label>
+            <input id="model-path" type="text" class="form-input" value="/home/Darsh/models/Bonsai-27B-Q1_0.gguf">
+          </div>
+        </div>
+
+        <!-- Tunnel Config -->
+        <div class="settings-group">
+          <h3>Tunnel</h3>
+          <div class="form-row">
+            <label class="form-label" for="tunnel-engine">Engine</label>
+            <select id="tunnel-engine" class="form-select sm">
+              <option value="ngrok" selected>ngrok</option>
+              <option value="cloudflare">Cloudflare Quick Tunnel</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="ngrok-token">Ngrok Auth Token</label>
+            <input id="ngrok-token" type="text" class="form-input sm" value="2a8f3b1c4d5e6f7g8h9i0j">
+          </div>
+        </div>
+
+        <!-- Instagram Account -->
+        <div class="settings-group">
+          <h3>Instagram</h3>
+          <div class="form-row">
+            <label class="form-label" for="ig-access-token">Access Token</label>
+            <input id="ig-access-token" type="password" class="form-input sm" value="IGQWR1a2b3c4d5e6f7g8h9i0j">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="ig-page-id">Page ID</label>
+            <input id="ig-page-id" type="text" class="form-input sm" value="17841405793180680">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="ig-user-id">User ID</label>
+            <input id="ig-user-id" type="text" class="form-input sm" value="17841405793180680">
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn btn-primary">Save Settings</button>
+          <button class="btn btn-ghost">Reset to Defaults</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add Quote Modal -->
+  <div id="add-quote-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Quote</h3>
+        <button class="modal-close" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label class="form-label">Quote Text</label>
+          <textarea id="new-quote-text" class="form-input" rows="4" placeholder="Enter the quote text..."></textarea>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Source / Author</label>
+          <input id="new-quote-source" type="text" class="form-input" placeholder="e.g. Albert Camus">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Category</label>
+          <select id="new-quote-category" class="form-select">
+            <option value="philosophy">Philosophy</option>
+            <option value="anime">Anime</option>
+            <option value="literature">Literature</option>
+            <option value="literary">Literary</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="cancel-add-quote">Cancel</button>
+        <button class="btn btn-primary" id="save-add-quote">Save Quote</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

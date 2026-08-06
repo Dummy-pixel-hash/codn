@@ -23,3 +23,10 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Tool artifacts
+.impeccable/
+.omo/
+
+# Generated media
+output/

@@ -17,6 +17,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 
@@ -42,6 +43,7 @@ async def lifespan(app):
     """Handle startup and shutdown lifecycle."""
     # Startup
     database.init_db()
+    database.init_generations_table()
     config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     print("[codn] Initialized")
     yield
@@ -141,62 +143,195 @@ async def generate(req: GenerateRequest):
     """Generate a new quote image and optionally upload it."""
     global _llama_proc, _comfy_proc
 
-    # Phase 1: Generate art prompt using text model
-    print("[codn] Phase 1: Generating art prompt...")
-    if not llama_manager.is_running():
-        print("[codn] Starting llama-server...")
-        _llama_proc = llama_manager.start_llama()
-        if not _llama_proc:
-            raise HTTPException(status_code=500, detail="Failed to start llama-server")
+    art_prompt = None
+    overlay_style = None
+    output_path = None
 
-    art_prompt = llama_manager.generate_art_prompt(
-        _llama_proc,
-        system_prompt=f"Generate an art prompt for the category: {req.category or 'general'}. {f'Constraint: {req.theme}' if req.theme else ''}",
-    )
+    try:
+        # Phase 1: Generate art prompt using text model
+        print("[codn] Phase 1: Generating art prompt...")
+        if not llama_manager.is_running():
+            print("[codn] Starting llama-server...")
+            _llama_proc = llama_manager.start_llama()
+            if not _llama_proc:
+                raise HTTPException(status_code=500, detail="Failed to start llama-server")
 
-    # Check deduplication
-    if database.prompt_exists(art_prompt):
-        print("[codn] Prompt already used, regenerating...")
         art_prompt = llama_manager.generate_art_prompt(
             _llama_proc,
-            system_prompt=f"Generate a DIFFERENT art prompt. Category: {req.category or 'general'}. Constraint: {req.theme or 'none'}",
+            system_prompt=f"Generate an art prompt for the category: {req.category or 'general'}. {f'Constraint: {req.theme}' if req.theme else ''}",
         )
 
-    database.save_prompt(art_prompt)
-    print(f"[codn] Art prompt: {art_prompt[:120]}...")
+        # Check deduplication
+        if database.prompt_exists(art_prompt):
+            print("[codn] Prompt already used, regenerating...")
+            art_prompt = llama_manager.generate_art_prompt(
+                _llama_proc,
+                system_prompt=f"Generate a DIFFERENT art prompt. Category: {req.category or 'general'}. Constraint: {req.theme or 'none'}",
+            )
 
-    # Kill llama-server to free VRAM — MUST happen before ComfyUI starts
-    if _llama_proc:
-        print("[codn] Stopping llama-server (freeing VRAM)...")
-        llama_manager.stop_llama(_llama_proc, wait_for_vram=True)
-        _llama_proc = None
-        # Double-check it's actually dead
-        for _ in range(10):
-            if not llama_manager.is_running():
-                break
-            print("[codn] Waiting for llama-server to fully stop...")
-            await asyncio.sleep(1)
-        print("[codn] llama-server stopped, VRAM freed")
+        database.save_prompt(art_prompt)
+        print(f"[codn] Art prompt: {art_prompt[:120]}...")
 
-    # Phase 2: Generate art using ComfyUI
-    print("[codn] Phase 2: Generating art...")
-    if not comfy_manager.is_running():
-        print("[codn] Starting ComfyUI...")
-        _comfy_proc = comfy_manager.start_comfyui()
-        if not _comfy_proc:
-            raise HTTPException(status_code=500, detail="Failed to start ComfyUI")
+        # Kill llama-server to free VRAM — MUST happen before ComfyUI starts
+        if _llama_proc:
+            print("[codn] Stopping llama-server (freeing VRAM)...")
+            llama_manager.stop_llama(_llama_proc, wait_for_vram=True)
+            _llama_proc = None
+            # Double-check it's actually dead
+            for _ in range(10):
+                if not llama_manager.is_running():
+                    break
+                print("[codn] Waiting for llama-server to fully stop...")
+                await asyncio.sleep(1)
+            print("[codn] llama-server stopped, VRAM freed")
 
-    image_path = comfy_manager.generate_art(art_prompt)
+        # Phase 2: Generate art using ComfyUI
+        print("[codn] Phase 2: Generating art...")
+        if not comfy_manager.is_running():
+            print("[codn] Starting ComfyUI...")
+            _comfy_proc = comfy_manager.start_comfyui()
+            if not _comfy_proc:
+                raise HTTPException(status_code=500, detail="Failed to start ComfyUI")
 
-    # Kill ComfyUI to free VRAM
-    if _comfy_proc:
-        print("[codn] Stopping ComfyUI (freeing VRAM)...")
-        comfy_manager.stop_comfyui(_comfy_proc)
-        _comfy_proc = None
-        await asyncio.sleep(2)
+        image_path = comfy_manager.generate_art(art_prompt)
 
-    if not image_path:
-        raise HTTPException(status_code=500, detail="Art generation failed — check ComfyUI logs")
+        # Kill ComfyUI to free VRAM
+        if _comfy_proc:
+            print("[codn] Stopping ComfyUI (freeing VRAM)...")
+            comfy_manager.stop_comfyui(_comfy_proc)
+            _comfy_proc = None
+            await asyncio.sleep(2)
+
+        if not image_path:
+            raise HTTPException(status_code=500, detail="Art generation failed — check ComfyUI logs")
+
+        print(f"[codn] Art generated: {image_path}")
+
+        # Phase 3: Add text overlay using text model
+        print("[codn] Phase 3: Generating text overlay...")
+        if not llama_manager.is_running():
+            print("[codn] Starting llama-server for text overlay...")
+            _llama_proc = llama_manager.start_llama()
+            if not _llama_proc:
+                raise HTTPException(status_code=500, detail="Failed to start llama-server for text overlay")
+
+        # Give the overlay model the actual creative context. A file path contains
+        # no useful visual or thematic information, so passing it produced generic
+        # quotes and arbitrary placement decisions.
+        overlay_style = llama_manager.generate_text_overlay(
+            _llama_proc,
+            image_path,
+            art_prompt=art_prompt,
+            category=req.category,
+            theme=req.theme,
+        )
+        print(f"[codn] Overlay style: {json.dumps(overlay_style)}")
+
+        # Apply overlay (Pillow — no GPU needed)
+        output_name = f"{uuid.uuid4().hex[:8]}_quote.jpg"
+        config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        output_path = str(config.OUTPUT_DIR / output_name)
+        text_overlay.add_text_overlay(image_path, output_path, overlay_style)
+        print(f"[codn] Final image: {output_path}")
+
+        # Generate the upload caption + hashtags while llama-server is still
+        # running — it gets killed below to free VRAM.
+        caption_data = None
+        if req.upload:
+            print("[codn] Generating upload caption + hashtags...")
+            try:
+                caption_data = llama_manager.generate_caption(
+                    _llama_proc,
+                    quote=overlay_style.get("quote", ""),
+                    author=overlay_style.get("author", ""),
+                    art_prompt=art_prompt,
+                    category=req.category,
+                    theme=req.theme,
+                    trending_terms=trending.get_trending_terms(),
+                )
+            except Exception as e:
+                print(f"[codn] Caption generation failed, falling back: {e}")
+                caption_data = None
+
+        # Kill llama-server (we're done with it)
+        if _llama_proc:
+            llama_manager.stop_llama(_llama_proc)
+            _llama_proc = None
+
+        # Phase 4: Upload to Instagram
+        if req.upload:
+            print("[codn] Phase 4: Uploading to Instagram...")
+            caption = llama_manager.format_caption(
+                overlay_style["quote"], overlay_style.get("author"), caption_data
+            )
+            if req.music:
+                # Instagram fetches the public image while this call is in
+                # progress. Keep Uvicorn's event loop free to serve /media.
+                result = await asyncio.to_thread(
+                    instagram_uploader.upload_reel, output_path, caption, req.music
+                )
+            else:
+                result = await asyncio.to_thread(
+                    instagram_uploader.upload_post, output_path, caption
+                )
+
+            # Record this generation in the database for the dashboard
+            upload_status = "success" if result else "upload_failed"
+            image_filename = os.path.basename(output_path) if output_path else None
+            database.save_generation(
+                status=upload_status,
+                category=req.category,
+                theme=req.theme,
+                quote_text=overlay_style.get("quote"),
+                author=overlay_style.get("author"),
+                art_prompt=art_prompt,
+                image_filename=image_filename,
+            )
+
+            return JSONResponse({
+                "status": upload_status,
+                "image": output_path,
+                "prompt": art_prompt,
+                "overlay": overlay_style,
+                "upload_result": result,
+            })
+
+        # Record non-upload generation as success
+        image_filename = os.path.basename(output_path) if output_path else None
+        database.save_generation(
+            status="success",
+            category=req.category,
+            theme=req.theme,
+            quote_text=overlay_style.get("quote"),
+            author=overlay_style.get("author"),
+            art_prompt=art_prompt,
+            image_filename=image_filename,
+        )
+
+        return JSONResponse({
+            "status": "generated",
+            "image": output_path,
+            "prompt": art_prompt,
+            "overlay": overlay_style,
+        })
+
+    except HTTPException:
+        # Re-raise FastAPI HTTP exceptions (400, 500) as-is
+        raise
+    except Exception as e:
+        # Record unexpected failures
+        image_filename = os.path.basename(output_path) if output_path else None
+        database.save_generation(
+            status="failed",
+            category=req.category,
+            theme=req.theme,
+            quote_text=overlay_style.get("quote") if overlay_style else None,
+            author=overlay_style.get("author") if overlay_style else None,
+            art_prompt=art_prompt,
+            image_filename=image_filename,
+            error_message=str(e)[:500],
+        )
+        raise HTTPException(status_code=500, detail=str(e))
 
     print(f"[codn] Art generated: {image_path}")
 
@@ -268,13 +403,38 @@ async def generate(req: GenerateRequest):
                 instagram_uploader.upload_post, output_path, caption
             )
 
+        # Record this generation in the database for the dashboard
+        upload_status = "success" if result else "upload_failed"
+        image_filename = os.path.basename(output_path) if output_path else None
+        database.save_generation(
+            status=upload_status,
+            category=req.category,
+            theme=req.theme,
+            quote_text=overlay_style.get("quote"),
+            author=overlay_style.get("author"),
+            art_prompt=art_prompt,
+            image_filename=image_filename,
+        )
+
         return JSONResponse({
-            "status": "uploaded" if result else "upload_failed",
+            "status": upload_status,
             "image": output_path,
             "prompt": art_prompt,
             "overlay": overlay_style,
             "upload_result": result,
         })
+
+    # Record non-upload generation as success
+    image_filename = os.path.basename(output_path) if output_path else None
+    database.save_generation(
+        status="success",
+        category=req.category,
+        theme=req.theme,
+        quote_text=overlay_style.get("quote"),
+        author=overlay_style.get("author"),
+        art_prompt=art_prompt,
+        image_filename=image_filename,
+    )
 
     return JSONResponse({
         "status": "generated",
@@ -318,9 +478,26 @@ async def upload_manual(body: dict):
 
 @app.get("/quotes")
 async def get_quotes(category: str = None):
-    """Get used prompts (for debugging/monitoring)."""
-    return {"message": "Use /generate to create new content", "prompts_tracked": database.get_used_count()}
+    """Return all used quotes with their metadata."""
+    quotes = database.get_used_quotes(limit=200)
+    if category:
+        quotes = [q for q in quotes if q.get("category") == category]
+    return {"quotes": quotes, "total": len(quotes)}
 
+
+@app.get("/history")
+async def get_history(status: str = None, category: str = None):
+    """Return generation history for the dashboard."""
+    generations = database.get_generations(status=status, category=category, limit=100)
+    return {"generations": generations, "total": len(generations)}
+
+
+# ── Static Files (Dashboard) ───────────────────────────────────────────────
+
+FRONTEND_DIR = config.BASE_DIR / "frontend"
+
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 # ── Main ───────────────────────────────────────────────────────────────────
 

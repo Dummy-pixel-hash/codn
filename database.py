@@ -109,3 +109,108 @@ def get_used_count(db_path: Path | str = QUOTES_DB) -> int:
     row = conn.execute("SELECT COUNT(*) FROM used_prompts").fetchone()
     conn.close()
     return row[0]
+
+
+def init_generations_table(db_path: Path | str = QUOTES_DB):
+    """Create the generations tracking table if it doesn't exist."""
+    conn = _get_conn(db_path)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS generations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            status TEXT NOT NULL,
+            category TEXT,
+            theme TEXT,
+            quote_text TEXT,
+            author TEXT,
+            art_prompt TEXT,
+            image_filename TEXT,
+            error_message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gen_status ON generations(status)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gen_category ON generations(category)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gen_created ON generations(created_at)"
+    )
+    conn.commit()
+    conn.close()
+
+
+def save_generation(status: str, category: str | None = None, theme: str | None = None,
+                    quote_text: str | None = None, author: str | None = None,
+                    art_prompt: str | None = None, image_filename: str | None = None,
+                    error_message: str | None = None, db_path: Path | str = QUOTES_DB):
+    """Record a generation run result."""
+    conn = _get_conn(db_path)
+    try:
+        conn.execute(
+            """INSERT INTO generations (status, category, theme, quote_text, author, art_prompt, image_filename, error_message)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (status, category, theme, quote_text, author, art_prompt, image_filename, error_message),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_generations(status: str | None = None, category: str | None = None, limit: int = 50) -> list[dict]:
+    """Return generation history records."""
+    conn = _get_conn(QUOTES_DB)
+    try:
+        conditions = []
+        params = []
+        if status:
+            conditions.append("status = ?")
+            params.append(status)
+        if category:
+            conditions.append("category = ?")
+            params.append(category)
+
+        where_clause = " AND ".join(conditions) if conditions else ""
+        query = f"SELECT id, status, category, theme, quote_text, author, art_prompt, image_filename, error_message, created_at FROM generations {where_clause} ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+
+        rows = conn.execute(query, params).fetchall()
+        return [
+            {
+                "id": row[0],
+                "status": row[1],
+                "category": row[2],
+                "theme": row[3],
+                "quote_text": row[4],
+                "author": row[5],
+                "art_prompt": row[6],
+                "image_filename": row[7],
+                "error_message": row[8],
+                "created_at": row[9],
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()
+
+
+def get_used_quotes(limit: int = 100) -> list[dict]:
+    """Return all used quotes with their metadata from the generations table."""
+    conn = _get_conn(QUOTES_DB)
+    try:
+        rows = conn.execute(
+            "SELECT category, quote_text, author, created_at FROM generations WHERE status = 'success' AND quote_text IS NOT NULL ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [
+            {
+                "category": row[0],
+                "quote_text": row[1],
+                "author": row[2],
+                "created_at": row[3],
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()
