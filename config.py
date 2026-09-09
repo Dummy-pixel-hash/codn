@@ -18,12 +18,24 @@ def env(name: str, default: str = "") -> str:
 
 def env_int(name: str, default: int) -> int:
     v = os.getenv(name)
-    return int(v) if v is not None else default
+    if v is None or not str(v).strip():
+        return default
+    try:
+        return int(str(v).strip())
+    except ValueError:
+        print(f"[config] Invalid int for {name}={v!r}, using default {default}")
+        return default
 
 
 def env_float(name: str, default: float) -> float:
     v = os.getenv(name)
-    return float(v) if v is not None else default
+    if v is None or not str(v).strip():
+        return default
+    try:
+        return float(str(v).strip())
+    except ValueError:
+        print(f"[config] Invalid float for {name}={v!r}, using default {default}")
+        return default
 
 
 # Paths
@@ -56,3 +68,9 @@ COMFYUI_WORKFLOW_PATH = Path(env("COMFYUI_WORKFLOW_PATH", str(BASE_DIR / "workfl
 # App
 APP_HOST = env("APP_HOST", "0.0.0.0")
 APP_PORT = env_int("APP_PORT", 4000)
+
+# Auth — bearer token required for all mutating endpoints and for
+# config/history/quotes reads. Fail-closed: when empty, guarded endpoints
+# return 503 until the operator sets a token. Generate one with:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+API_TOKEN = env("API_TOKEN")

@@ -65,6 +65,17 @@ def _clamp_int(value, low: int, high: int, default: int) -> int:
         return default
 
 
+def _sanitise_tag(value) -> str | None:
+    """Clean a model-provided grouping tag; None when unusable."""
+    if not isinstance(value, str):
+        return None
+    tag = value.strip().lower().replace(" ", "-").replace("_", "-")
+    tag = "".join(c for c in tag if c.isalnum() or c == "-").strip("-")
+    if not tag:
+        return None
+    return tag[:30].rstrip("-") or None
+
+
 class FontRegistry:
     """Loads the font manifest and exposes lookup/fallback/prompt/validation."""
 
@@ -266,6 +277,7 @@ class FontRegistry:
             "text_gradient_from": gradient_from,
             "text_gradient_to": gradient_to,
             "letter_spacing": _clamp_int(d.get("letter_spacing", 0), 0, 10, 0),
+            "tag": _sanitise_tag(d.get("tag")),
         }
         for key, values in _ALLOWED.items():
             if result[key] not in values:

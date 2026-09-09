@@ -1,0 +1,750 @@
+{
+  "_note": "Character-name aliases for quote lookup. Keys are matched after the same normalisation as queries (lowercase, non-alphanumerics to spaces). Every 'sources' entry must exactly match a 'source' in data/quotes.json (case-insensitive) — tests/test_character_aliases.py enforces that no alias is dead.",
+  "tony stark": {
+    "character": "Tony Stark",
+    "sources": [
+      "Iron Man",
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ],
+    "depicts": [
+      "red-and-gold powered armor suit",
+      "glowing arc-reactor chest piece",
+      "high-tech workshop ambience"
+    ]
+  },
+  "iron man": {
+    "character": "Tony Stark",
+    "sources": [
+      "Iron Man",
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ],
+    "depicts": [
+      "red-and-gold powered armor suit",
+      "glowing arc-reactor chest piece",
+      "high-tech workshop ambience"
+    ]
+  },
+  "bruce wayne": {
+    "character": "Bruce Wayne",
+    "sources": [
+      "BATMAN V SUPERMAN: DAWN OF JUSTICE",
+      "Batman",
+      "Batman & Robin",
+      "Batman Begins",
+      "Batman begins",
+      "Batman: The Dark Knight",
+      "Batman: The Dark Knight Returns"
+    ],
+    "depicts": [
+      "black cowl and cape silhouette",
+      "bat emblem",
+      "gothic city rooftops at night"
+    ]
+  },
+  "batman": {
+    "character": "Batman",
+    "sources": [
+      "BATMAN V SUPERMAN: DAWN OF JUSTICE",
+      "Batman",
+      "Batman & Robin",
+      "Batman Begins",
+      "Batman begins",
+      "Batman: The Dark Knight",
+      "Batman: The Dark Knight Returns"
+    ],
+    "depicts": [
+      "black cowl and cape silhouette",
+      "bat emblem",
+      "gothic city rooftops at night"
+    ]
+  },
+  "joker": {
+    "character": "Joker",
+    "sources": [
+      "Joker"
+    ],
+    "depicts": [
+      "clown-white grin motif",
+      "purple-green palette accents",
+      "chaotic carnival-gone-wrong mood"
+    ]
+  },
+  "peter parker": {
+    "character": "Peter Parker",
+    "sources": [
+      "Spider Man",
+      "Spider-Man: Homecoming",
+      "Spiderman"
+    ],
+    "depicts": [
+      "red-and-blue webbed suit motif",
+      "city skyline with web lines",
+      "skyscraper heights"
+    ]
+  },
+  "spider man": {
+    "character": "Peter Parker",
+    "sources": [
+      "Spider Man",
+      "Spider-Man: Homecoming",
+      "Spiderman"
+    ],
+    "depicts": [
+      "red-and-blue webbed suit motif",
+      "city skyline with web lines",
+      "skyscraper heights"
+    ]
+  },
+  "steve rogers": {
+    "character": "Steve Rogers",
+    "sources": [
+      "Captain America: Civil War",
+      "Captain America: The Winter Soldier"
+    ]
+  },
+  "captain america": {
+    "character": "Steve Rogers",
+    "sources": [
+      "Captain America: Civil War",
+      "Captain America: The Winter Soldier"
+    ]
+  },
+  "thor": {
+    "character": "Thor",
+    "sources": [
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ]
+  },
+  "hulk": {
+    "character": "Hulk",
+    "sources": [
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ]
+  },
+  "bruce banner": {
+    "character": "Hulk",
+    "sources": [
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ]
+  },
+  "natasha romanoff": {
+    "character": "Black Widow",
+    "sources": [
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ]
+  },
+  "black widow": {
+    "character": "Black Widow",
+    "sources": [
+      "Avengers - Age of Ultron",
+      "Avengers : Infinity War",
+      "Avengers: Endgame",
+      "Avengers: Infinity War",
+      "Marvel's The Avengers",
+      "The Avengers"
+    ]
+  },
+  "wade wilson": {
+    "character": "Deadpool",
+    "sources": [
+      "Deadpool",
+      "Deadpool 2"
+    ]
+  },
+  "deadpool": {
+    "character": "Deadpool",
+    "sources": [
+      "Deadpool",
+      "Deadpool 2"
+    ]
+  },
+  "logan": {
+    "character": "Wolverine",
+    "sources": [
+      "X-Men: Days of Future Past"
+    ]
+  },
+  "wolverine": {
+    "character": "Wolverine",
+    "sources": [
+      "X-Men: Days of Future Past"
+    ]
+  },
+  "t'challa": {
+    "character": "Black Panther",
+    "sources": [
+      "Black Panther"
+    ]
+  },
+  "black panther": {
+    "character": "Black Panther",
+    "sources": [
+      "Black Panther"
+    ]
+  },
+  "peter quill": {
+    "character": "Star-Lord",
+    "sources": [
+      "Guardians of the Galaxy"
+    ]
+  },
+  "star lord": {
+    "character": "Star-Lord",
+    "sources": [
+      "Guardians of the Galaxy"
+    ]
+  },
+  "jack sparrow": {
+    "character": "Jack Sparrow",
+    "sources": [
+      "Pirates of the Caribbean: The Curse of the Black Pearl",
+      "Pirates of the Carribean"
+    ],
+    "depicts": [
+      "pirate coat and compass",
+      "tall ship and ocean",
+      "rum-bottle still life"
+    ]
+  },
+  "neo": {
+    "character": "Neo",
+    "sources": [
+      "Matrix",
+      "The Matrix"
+    ],
+    "depicts": [
+      "long black coat silhouette",
+      "green digital-rain motifs",
+      "mirrored sunglasses glint"
+    ]
+  },
+  "thomas anderson": {
+    "character": "Neo",
+    "sources": [
+      "Matrix",
+      "The Matrix"
+    ]
+  },
+  "morpheus": {
+    "character": "Morpheus",
+    "sources": [
+      "Matrix",
+      "The Matrix"
+    ],
+    "depicts": [
+      "mirrored sunglasses glint",
+      "red and blue pill motif",
+      "hovercraft interiors"
+    ]
+  },
+  "trinity": {
+    "character": "Trinity",
+    "sources": [
+      "Matrix",
+      "The Matrix"
+    ]
+  },
+  "gandalf": {
+    "character": "Gandalf",
+    "sources": [
+      "The Lord of the Rings: Return of the King",
+      "The Lord of the Rings: The Fellowship of the Ring",
+      "The Lord of the Rings: The Two Towers"
+    ],
+    "depicts": [
+      "grey robes and staff",
+      "mountain pass",
+      "eagles and storm light"
+    ]
+  },
+  "frodo": {
+    "character": "Frodo Baggins",
+    "sources": [
+      "The Lord of the Rings: Return of the King",
+      "The Lord of the Rings: The Fellowship of the Ring",
+      "The Lord of the Rings: The Two Towers"
+    ]
+  },
+  "frodo baggins": {
+    "character": "Frodo Baggins",
+    "sources": [
+      "The Lord of the Rings: Return of the King",
+      "The Lord of the Rings: The Fellowship of the Ring",
+      "The Lord of the Rings: The Two Towers"
+    ]
+  },
+  "aragorn": {
+    "character": "Aragorn",
+    "sources": [
+      "The Lord of the Rings: Return of the King",
+      "The Lord of the Rings: The Fellowship of the Ring",
+      "The Lord of the Rings: The Two Towers"
+    ]
+  },
+  "gollum": {
+    "character": "Gollum",
+    "sources": [
+      "The Lord of the Rings: Return of the King",
+      "The Lord of the Rings: The Fellowship of the Ring",
+      "The Lord of the Rings: The Two Towers"
+    ]
+  },
+  "legolas": {
+    "character": "Legolas",
+    "sources": [
+      "The Lord of the Rings: Return of the King",
+      "The Lord of the Rings: The Fellowship of the Ring",
+      "The Lord of the Rings: The Two Towers"
+    ]
+  },
+  "yoda": {
+    "character": "Yoda",
+    "sources": [
+      "Star Wars",
+      "Star Wars Episode 6 : Return Of The Jedi",
+      "Star Wars Episode IV - A New Hope",
+      "Star Wars, Empire Strikes Back",
+      "Star Wars: Episode I – The Phantom Menace",
+      "Star Wars: Episode III – Revenge of the Sith",
+      "Star Wars: Episode V - The Empire Strikes Back",
+      "Star Wars: Episode VII - The Force Awakens",
+      "Star Wars: Return of Jedi",
+      "Star Wars: The Force Awakens"
+    ],
+    "depicts": [
+      "small robed sage silhouette",
+      "swamp planet mist",
+      "glowing lightsaber accents"
+    ]
+  },
+  "luke skywalker": {
+    "character": "Luke Skywalker",
+    "sources": [
+      "Star Wars",
+      "Star Wars Episode 6 : Return Of The Jedi",
+      "Star Wars Episode IV - A New Hope",
+      "Star Wars, Empire Strikes Back",
+      "Star Wars: Episode I – The Phantom Menace",
+      "Star Wars: Episode III – Revenge of the Sith",
+      "Star Wars: Episode V - The Empire Strikes Back",
+      "Star Wars: Episode VII - The Force Awakens",
+      "Star Wars: Return of Jedi",
+      "Star Wars: The Force Awakens"
+    ],
+    "depicts": [
+      "desert twin-sun horizon",
+      "lightsaber glow",
+      "rebel starfighter motifs"
+    ]
+  },
+  "darth vader": {
+    "character": "Darth Vader",
+    "sources": [
+      "Star Wars",
+      "Star Wars Episode 6 : Return Of The Jedi",
+      "Star Wars Episode IV - A New Hope",
+      "Star Wars, Empire Strikes Back",
+      "Star Wars: Episode I – The Phantom Menace",
+      "Star Wars: Episode III – Revenge of the Sith",
+      "Star Wars: Episode V - The Empire Strikes Back",
+      "Star Wars: Episode VII - The Force Awakens",
+      "Star Wars: Return of Jedi",
+      "Star Wars: The Force Awakens"
+    ],
+    "depicts": [
+      "black helmet and cape silhouette",
+      "red lightsaber glow",
+      "imperial starship interiors"
+    ]
+  },
+  "han solo": {
+    "character": "Han Solo",
+    "sources": [
+      "Star Wars",
+      "Star Wars Episode 6 : Return Of The Jedi",
+      "Star Wars Episode IV - A New Hope",
+      "Star Wars, Empire Strikes Back",
+      "Star Wars: Episode I – The Phantom Menace",
+      "Star Wars: Episode III – Revenge of the Sith",
+      "Star Wars: Episode V - The Empire Strikes Back",
+      "Star Wars: Episode VII - The Force Awakens",
+      "Star Wars: Return of Jedi",
+      "Star Wars: The Force Awakens"
+    ]
+  },
+  "obi wan kenobi": {
+    "character": "Obi-Wan Kenobi",
+    "sources": [
+      "Star Wars",
+      "Star Wars Episode 6 : Return Of The Jedi",
+      "Star Wars Episode IV - A New Hope",
+      "Star Wars, Empire Strikes Back",
+      "Star Wars: Episode I – The Phantom Menace",
+      "Star Wars: Episode III – Revenge of the Sith",
+      "Star Wars: Episode V - The Empire Strikes Back",
+      "Star Wars: Episode VII - The Force Awakens",
+      "Star Wars: Return of Jedi",
+      "Star Wars: The Force Awakens"
+    ]
+  },
+  "leia organa": {
+    "character": "Princess Leia",
+    "sources": [
+      "Star Wars",
+      "Star Wars Episode 6 : Return Of The Jedi",
+      "Star Wars Episode IV - A New Hope",
+      "Star Wars, Empire Strikes Back",
+      "Star Wars: Episode I – The Phantom Menace",
+      "Star Wars: Episode III – Revenge of the Sith",
+      "Star Wars: Episode V - The Empire Strikes Back",
+      "Star Wars: Episode VII - The Force Awakens",
+      "Star Wars: Return of Jedi",
+      "Star Wars: The Force Awakens"
+    ]
+  },
+  "spock": {
+    "character": "Spock",
+    "sources": [
+      "Star Trek II: The Wrath of Khan"
+    ]
+  },
+  "kirk": {
+    "character": "Kirk",
+    "sources": [
+      "Star Trek II: The Wrath of Khan"
+    ]
+  },
+  "tyler durden": {
+    "character": "Tyler Durden",
+    "sources": [
+      "Fight Club"
+    ],
+    "depicts": [
+      "underground fight-club basement",
+      "single hanging bulb",
+      "soap bars"
+    ]
+  },
+  "hannibal lecter": {
+    "character": "Hannibal Lecter",
+    "sources": [
+      "The Silence of the Lambs",
+      "The Silence of the lambs"
+    ],
+    "depicts": [
+      "elegant dinner table",
+      "moth motif",
+      "courtroom sketch mood"
+    ]
+  },
+  "vito corleone": {
+    "character": "Vito Corleone",
+    "sources": [
+      "The Godfather",
+      "The Godfather II",
+      "The Godfather III"
+    ]
+  },
+  "michael corleone": {
+    "character": "Michael Corleone",
+    "sources": [
+      "The Godfather",
+      "The Godfather II",
+      "The Godfather III"
+    ]
+  },
+  "andy dufresne": {
+    "character": "Andy Dufresne",
+    "sources": [
+      "Shawshank Redemption",
+      "The Shawshank Redemption"
+    ]
+  },
+  "maximus": {
+    "character": "Maximus",
+    "sources": [
+      "Gladiator"
+    ]
+  },
+  "rocky balboa": {
+    "character": "Rocky Balboa",
+    "sources": [
+      "Rocky"
+    ],
+    "depicts": [
+      "boxing gloves and robe",
+      "stone museum steps at dawn",
+      "training gym gloom"
+    ]
+  },
+  "forrest gump": {
+    "character": "Forrest Gump",
+    "sources": [
+      "Forrest Gump"
+    ],
+    "depicts": [
+      "park bench and feather motif",
+      "running road through green hills",
+      "box of chocolates"
+    ]
+  },
+  "woody": {
+    "character": "Woody",
+    "sources": [
+      "Toy Story"
+    ]
+  },
+  "buzz lightyear": {
+    "character": "Buzz Lightyear",
+    "sources": [
+      "Toy Story"
+    ]
+  },
+  "dory": {
+    "character": "Dory",
+    "sources": [
+      "Finding Nemo"
+    ]
+  },
+  "nemo": {
+    "character": "Nemo",
+    "sources": [
+      "Finding Nemo"
+    ]
+  },
+  "simba": {
+    "character": "Simba",
+    "sources": [
+      "The Lion King"
+    ]
+  },
+  "mufasa": {
+    "character": "Mufasa",
+    "sources": [
+      "The Lion King"
+    ]
+  },
+  "scar": {
+    "character": "Scar",
+    "sources": [
+      "The Lion King"
+    ]
+  },
+  "elsa": {
+    "character": "Elsa",
+    "sources": [
+      "Frozen",
+      "Frozen II"
+    ]
+  },
+  "anna": {
+    "character": "Anna",
+    "sources": [
+      "Frozen",
+      "Frozen II"
+    ]
+  },
+  "shrek": {
+    "character": "Shrek",
+    "sources": [
+      "Shrek"
+    ]
+  },
+  "donkey": {
+    "character": "Donkey",
+    "sources": [
+      "Shrek"
+    ]
+  },
+  "marty mcfly": {
+    "character": "Marty McFly",
+    "sources": [
+      "Back to the Future",
+      "Back to the Future Part II",
+      "Back to the future"
+    ]
+  },
+  "doc brown": {
+    "character": "Doc Brown",
+    "sources": [
+      "Back to the Future",
+      "Back to the Future Part II",
+      "Back to the future"
+    ]
+  },
+  "harry potter": {
+    "character": "Harry Potter",
+    "sources": [
+      "Harry Potter and the Chamber of Secrets",
+      "Harry Potter and the Deathly Hallows",
+      "Harry Potter and the Goblet of Fire",
+      "Harry Potter and the Half-Blood Prince",
+      "Harry Potter and the Philosopher's Stone",
+      "Harry Potter and the Prisoner of Azkaban",
+      "Harry Potter and the Sorcerer's Stone"
+    ],
+    "depicts": [
+      "round glasses and lightning-bolt motif",
+      "castle towers",
+      "owl post"
+    ]
+  },
+  "hermione granger": {
+    "character": "Hermione Granger",
+    "sources": [
+      "Harry Potter and the Chamber of Secrets",
+      "Harry Potter and the Deathly Hallows",
+      "Harry Potter and the Goblet of Fire",
+      "Harry Potter and the Half-Blood Prince",
+      "Harry Potter and the Philosopher's Stone",
+      "Harry Potter and the Prisoner of Azkaban",
+      "Harry Potter and the Sorcerer's Stone"
+    ],
+    "depicts": [
+      "castle library",
+      "wand sparks",
+      "stacked spellbooks"
+    ]
+  },
+  "albus dumbledore": {
+    "character": "Albus Dumbledore",
+    "sources": [
+      "Harry Potter and the Chamber of Secrets",
+      "Harry Potter and the Deathly Hallows",
+      "Harry Potter and the Goblet of Fire",
+      "Harry Potter and the Half-Blood Prince",
+      "Harry Potter and the Philosopher's Stone",
+      "Harry Potter and the Prisoner of Azkaban",
+      "Harry Potter and the Sorcerer's Stone"
+    ],
+    "depicts": [
+      "half-moon spectacles motif",
+      "towering bookshelves",
+      "phoenix embers"
+    ]
+  },
+  "severus snape": {
+    "character": "Severus Snape",
+    "sources": [
+      "Harry Potter and the Chamber of Secrets",
+      "Harry Potter and the Deathly Hallows",
+      "Harry Potter and the Goblet of Fire",
+      "Harry Potter and the Half-Blood Prince",
+      "Harry Potter and the Philosopher's Stone",
+      "Harry Potter and the Prisoner of Azkaban",
+      "Harry Potter and the Sorcerer's Stone"
+    ]
+  },
+  "ron weasley": {
+    "character": "Ron Weasley",
+    "sources": [
+      "Harry Potter and the Chamber of Secrets",
+      "Harry Potter and the Deathly Hallows",
+      "Harry Potter and the Goblet of Fire",
+      "Harry Potter and the Half-Blood Prince",
+      "Harry Potter and the Philosopher's Stone",
+      "Harry Potter and the Prisoner of Azkaban",
+      "Harry Potter and the Sorcerer's Stone"
+    ]
+  },
+  "voldemort": {
+    "character": "Voldemort",
+    "sources": [
+      "Harry Potter and the Chamber of Secrets",
+      "Harry Potter and the Deathly Hallows",
+      "Harry Potter and the Goblet of Fire",
+      "Harry Potter and the Half-Blood Prince",
+      "Harry Potter and the Philosopher's Stone",
+      "Harry Potter and the Prisoner of Azkaban",
+      "Harry Potter and the Sorcerer's Stone"
+    ]
+  },
+  "terminator": {
+    "character": "The Terminator",
+    "sources": [
+      "The Terminator"
+    ],
+    "depicts": [
+      "chrome endoskeleton hints",
+      "red eye glow",
+      "night highway"
+    ]
+  },
+  "t-800": {
+    "character": "The Terminator",
+    "sources": [
+      "The Terminator"
+    ]
+  },
+  "james bond": {
+    "character": "James Bond",
+    "sources": [
+      "Dr. No"
+    ],
+    "depicts": [
+      "tuxedo silhouette",
+      "martini glass",
+      "casino glamour"
+    ]
+  },
+  "ethan hunt": {
+    "character": "Ethan Hunt",
+    "sources": [
+      "Mission Impossible: fallout"
+    ]
+  },
+  "katniss everdeen": {
+    "character": "Katniss Everdeen",
+    "sources": [
+      "The Hunger Games"
+    ]
+  },
+  "ferris bueller": {
+    "character": "Ferris Bueller",
+    "sources": [
+      "Ferris Bueller's Day Off"
+    ]
+  },
+  "mulan": {
+    "character": "Mulan",
+    "sources": [
+      "Mulan"
+    ]
+  },
+  "william wallace": {
+    "character": "William Wallace",
+    "sources": [
+      "Braveheart"
+    ]
+  }
+}

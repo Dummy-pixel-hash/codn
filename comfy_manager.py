@@ -14,10 +14,14 @@ from pathlib import Path
 from config import COMFYUI_URL, COMFYUI_WORKFLOW_PATH, OUTPUT_DIR
 
 
-def start_comfyui():
-    """Start ComfyUI in the background."""
+def start_comfyui() -> subprocess.Popen | None:
+    """Start ComfyUI in the background.
+
+    Returns the Popen handle when this call started the server, or None when
+    already running (no handle owned) or startup failed.
+    """
     if is_running():
-        return True
+        return None
 
     cmd = [
         "/mnt/data/Models/venv/bin/python", "main.py",
@@ -90,10 +94,13 @@ def check_comfyui_nodes():
     return None
 
 
-def generate_art(prompt: str, output_dir: Path = OUTPUT_DIR) -> str | None:
+def generate_art(prompt: str, output_dir: Path = OUTPUT_DIR, should_stop=None) -> str | None:
     """
     Send a prompt to ComfyUI and wait for the generated image.
-    Returns the path to the output image, or None on failure.
+    Returns the path to the output image, or None on failure/cancel.
+
+    should_stop: optional zero-arg callable polled while waiting; when it
+    returns True the wait aborts early (cooperative job cancel).
     """
     if not is_running():
         print("[comfy] ComfyUI not running, starting...")
@@ -142,6 +149,9 @@ def generate_art(prompt: str, output_dir: Path = OUTPUT_DIR) -> str | None:
     max_wait = 300  # 5 minutes max
     elapsed = 0
     while elapsed < max_wait:
+        if should_stop is not None and should_stop():
+            print("[comfy] Generation cancelled")
+            return None
         try:
             hist_resp = requests.get(f"{COMFYUI_URL}/history/{prompt_id}", timeout=5)
             if hist_resp.status_code == 200 and hist_resp.json():

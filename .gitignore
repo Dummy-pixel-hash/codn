@@ -13,6 +13,9 @@ build/
 # Logs
 *.log
 
+# Local tunnel binary (downloaded, not source)
+cloudflared
+
 # SQLite DB (regenerated from data)
 quotes.db
 

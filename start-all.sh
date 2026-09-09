@@ -14,8 +14,19 @@ if [ -f .env ]; then
         # source even when .env was saved by a Windows editor.
         key="${key//$'\ufeff'/}"
         key="${key#"${key%%[![:space:]]*}"}"
+        # Trim trailing whitespace from the key and split on the first '='
+        # only (read already puts the remainder, including any '=' in the
+        # value such as tokens, into $value).
+        key="${key%"${key##*[![:space:]]}"}"
         [[ "$key" == \#* ]] && continue
         [[ -z "$key" ]] && continue
+        # Strip one pair of matching surrounding quotes so
+        # KEY="va lue" and KEY='a=b' export without the quotes.
+        if [[ "${value:0:1}" == '"' && "${value: -1}" == '"' && ${#value} -ge 2 ]]; then
+            value="${value:1:-1}"
+        elif [[ "${value:0:1}" == "'" && "${value: -1}" == "'" && ${#value} -ge 2 ]]; then
+            value="${value:1:-1}"
+        fi
         export "$key=$value"
     done < .env
 else

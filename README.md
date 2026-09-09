@@ -42,6 +42,23 @@ chmod +x start-all.sh
 ./start-all.sh
 ```
 
+## First-Time Setup
+
+Open the dashboard (http://localhost:4000, or your LAN IP on port 4000).
+A setup banner shows what's missing — click **Open setup** and walk the wizard:
+
+1. **Access** — paste the `API_TOKEN` from `.env` (printed by `start-all.sh` on first boot). Session-only, never stored on disk.
+2. **Model** — check the detected `.gguf` path or save a new one. Saved straight to `.env`, no restart needed.
+3. **Instagram** — manual for now: add these two lines to `.env`, restart the app, then hit **Re-check link** in the wizard:
+   ```bash
+   INSTAGRAM_ACCESS_TOKEN=<your long-lived token>
+   INSTAGRAM_BUSINESS_ID=<your IG business/page ID>
+   ```
+   (Requires an Instagram Professional account. One-click save inside the wizard lands with the upcoming server update.)
+4. **Services & test** — confirm tunnel + ComfyUI are green, then **Run trial generation** (no upload) to prove the pipeline works end to end.
+
+Re-run anytime via Settings → Run setup wizard. The banner stays hidden once all 5 checks pass.
+
 ## API Endpoints
 
 | Method | Path | Description |

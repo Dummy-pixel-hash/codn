@@ -44,14 +44,76 @@ def _normalise_query(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 
+# Character-name aliases (character -> {character display name, pool sources}).
+# Lets "tony stark" resolve to Iron Man quotes even though the pool has no
+# character field for movies. Keys are matched after _normalise_query.
+_ALIASES_CACHE: dict | None = None
+
+
+def _load_aliases() -> dict:
+    global _ALIASES_CACHE
+    if _ALIASES_CACHE is None:
+        path = os.path.join(str(BASE_DIR), "data", "character_aliases.json")
+        try:
+            with open(path, encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except (OSError, ValueError):
+            raw = {}
+        _ALIASES_CACHE = {
+            _normalise_query(k): v
+            for k, v in raw.items()
+            if not k.startswith("_") and isinstance(v, dict)
+            and v.get("character") and isinstance(v.get("sources"), list)
+        }
+    return _ALIASES_CACHE
+
+
+def _lookup_alias(query: str, pools: list[tuple[str, list[dict]]],
+                  unused) -> list[dict] | None:
+    """Match a character alias (e.g. 'tony stark') to its pool sources.
+
+    Matches whole-word subsets, so 'tony stark genius' still hits while
+    'author mindset' never matches 'thor' and 'oscar-worthy' never matches
+    'scar'. Longest alias (most words, then longest string) wins.
+    Returns None on miss (caller falls through to other stages). On a hit,
+    returns unused entries — possibly [] when exhausted, which must NOT fall
+    through to another character's quotes, so attribution stays exact.
+    Entries lacking a character field get the alias's display name attached
+    so downstream renders 'Tony Stark — Iron Man'.
+    """
+    aliases = _load_aliases()
+    words = set(query.split())
+    best_key: str | None = None
+    for alias in aliases:
+        alias_words = set(alias.split())
+        if alias_words and alias_words <= words:
+            if best_key is None or (len(alias_words), len(alias)) > (
+                len(set(best_key.split())), len(best_key),
+            ):
+                best_key = alias
+    if best_key is None:
+        return None
+    spec = aliases[best_key]
+    wanted = {_normalise_query(s) for s in spec["sources"]}
+    hits: list[dict] = []
+    for _, pool in pools:
+        for entry in pool:
+            if _normalise_query(entry.get("source", "")) in wanted:
+                if not entry.get("character"):
+                    entry = dict(entry, character=spec["character"])
+                hits.append(entry)
+    return unused(hits)
+
+
 def retrieve_quotes(category: str = "", theme: str = "", limit: int = 3) -> list[dict]:
     """
     Return real quotes when category/theme references a known anime/movie source.
 
-    Matching priority: exact source name, then character name, then containment
-    (longest matching source wins), then bare-category ("anime"/"movie") which
-    samples that pool. Quotes already used are skipped. Returns [] when nothing
-    is implied, so the model writes an original quote as before.
+    Matching priority: character alias, then exact source name, then
+    character name, then containment (longest matching source wins), then
+    bare-category ("anime"/"movie") which samples that pool. Quotes already
+    used are skipped. Returns [] when nothing is implied, so the model
+    writes an original quote as before.
     """
     data = _load_quotes()
     category = category or ""
@@ -66,6 +128,16 @@ def retrieve_quotes(category: str = "", theme: str = "", limit: int = 3) -> list
         return [e for e in entries if database.quote_key(e["quote"]) not in used]
 
     pools = [("anime", data["anime"]), ("movie", data["movie"])]
+
+    # 0) Character alias, e.g. theme="tony stark" -> Iron Man quotes with
+    #    character "Tony Stark" attached. A claimed query never falls through
+    #    (exhausted alias returns []), so attribution stays exact.
+    for candidate in (_normalise_query(theme), query):
+        if not candidate:
+            continue
+        aliased = _lookup_alias(candidate, pools, unused)
+        if aliased is not None:
+            return aliased[:limit]
 
     # 1) Exact source-name match, e.g. theme="naruto" -> source "Naruto".
     #    An exhausted source returns [] rather than falling through to a
@@ -89,13 +161,18 @@ def retrieve_quotes(category: str = "", theme: str = "", limit: int = 3) -> list
 
     # 3) Containment: query inside a source name (or vice versa); longest source
     #    wins so a request like "attack on titan" matches that series precisely.
+    #    Tiny sources ("us", "up", "saw", "elf", "300", "gie") only match
+    #    exactly (stage 1) — as substrings they hijack unrelated queries
+    #    ("genius" -> "Us", "suit up" -> "Up").
     best: list[tuple[int, list[dict]]] = []
     for _, pool in pools:
         by_source: dict[str, list[dict]] = {}
         for entry in pool:
             by_source.setdefault(_normalise_query(entry["source"]), []).append(entry)
         for src, entries in by_source.items():
-            if src and (query in src or src in query):
+            if not src or len(src) < 4:
+                continue
+            if query in src or src in query:
                 fresh = unused(entries)
                 if fresh:
                     best.append((len(src), fresh))
@@ -117,10 +194,15 @@ def retrieve_quotes(category: str = "", theme: str = "", limit: int = 3) -> list
     return []
 
 
-def start_llama():
-    """Start llama-server in the background."""
+def start_llama() -> subprocess.Popen | None:
+    """Start llama-server in the background.
+
+    Returns the Popen handle when this call started the server, or None when
+    the server was already running (no handle owned) or startup failed.
+    Callers must only pass a Popen handle to stop_llama().
+    """
     if is_running():
-        return True
+        return None
 
     cmd = [
         "llama-server",
@@ -235,6 +317,49 @@ def generate_art_prompt(llama_proc, system_prompt: str = None, max_tokens: int =
     raise RuntimeError("Failed to generate art prompt after 3 attempts")
 
 
+def subject_descriptors(name: str) -> list[str] | None:
+    """Iconic visual signifiers for a character, if the alias map has them.
+
+    Used to steer art toward the quote's subject (armor, cowl, staff —
+    never faces). Returns None when unknown; callers fall back to a
+    generic evocative line.
+    """
+    if not name:
+        return None
+    aliases = _load_aliases()
+    key = _normalise_query(name)
+    spec = aliases.get(key)
+    if spec and spec.get("depicts"):
+        return list(spec["depicts"])
+    for candidate in aliases.values():
+        if _normalise_query(candidate.get("character", "")) == key and candidate.get(
+            "depicts"
+        ):
+            return list(candidate["depicts"])
+    return None
+
+
+def pick_quote(category: str = "", theme: str = "", limit: int = 3) -> list[dict]:
+    """Pick real quotes for the vibe BEFORE art is generated (quote-first).
+
+    Local curated pool first, then free web search. Returns [] when nothing
+    matches, in which case the overlay model writes an original line.
+    Never raises — web failures degrade to local-only, then empty.
+    """
+    local = retrieve_quotes(category, theme, limit)
+    if local:
+        return local
+    try:
+        import quote_search
+
+        web = quote_search.search_quotes(f"{category or ''} {theme or ''}".strip(), limit)
+    except Exception as e:
+        print(f"[llama] web quote search failed: {e}")
+        return []
+    used = database.get_used_quote_keys()
+    return [e for e in web if database.quote_key(e["quote"]) not in used][:limit]
+
+
 def generate_text_overlay(
     llama_proc,
     art_image_path: str,
@@ -242,6 +367,7 @@ def generate_text_overlay(
     category: str = "",
     theme: str = "",
     max_tokens: int = 512,
+    recalled: list[dict] | None = None,
 ) -> dict:
     """
     Ask the text model what text + styling to overlay on the generated image.
@@ -260,7 +386,7 @@ def generate_text_overlay(
     if theme:
         context.append(f"User theme: {theme}")
 
-    recalled = retrieve_quotes(category, theme)
+    recalled = retrieve_quotes(category, theme) if recalled is None else recalled
     if recalled:
         lines = ["Real quotes from the requested source (pick one verbatim):"]
         for i, quote_entry in enumerate(recalled, 1):
@@ -410,6 +536,8 @@ Rules:
 - Always name a concrete art style and medium; if the brief names a style (anime, cyberpunk, noir, watercolor, etc.), commit to it with 2-3 signature descriptors of that style
 - If the subject is a character or person: they must NOT look directly at the viewer — use a three-quarter view looking away, a profile, a distant gaze, closed eyes, or a view from behind; if facing forward is unavoidable, add soft focus or shallow depth of field
 - Describe lighting explicitly (source + quality), composition (framing, angle, lens), and a restrained color palette
+- Favor a clean, uncluttered scene: a few strong elements beat many small ones, so avoid tiny secondary subjects, trinkets, and fussy surface minutiae
+- Keep backgrounds calm and low-detail (plain, soft, or gently blurred) — never busy or hyper-detailed
 - Reserve one clean, low-detail area (name its location) for a later quote overlay — plain empty space such as soft sky, a smooth wall, or out-of-focus background, never a frame, board, screen, or sign
 - Do not include words, letters, typography, logos, signatures, watermarks, borders, or UI elements in the artwork
 - Avoid objects that tend to render with writing: books or papers with visible covers/pages, posters, signs, billboards, graffiti, murals, screens or displays, headbands with metal plates, printed clothing, name tags, banners
@@ -469,6 +597,7 @@ Output a JSON object with:
 - "glow_color": hex color used when text_effect is "glow" (e.g. "#FFD700")
 - "text_gradient_from" / "text_gradient_to": hex colors for a vertical gradient fill; omit or use "" for solid color
 - "letter_spacing": pixels between letters, 0 to 10; 0 = normal
+- "tag": 1-2 word vibe label for grouping this post (e.g. stoicism, ocean-calm, naruto) — lowercase, no spaces (hyphens ok)
 
 Choose a position that avoids the main subject described in the art direction.
 Output ONLY valid JSON. No explanations, no markdown."""
@@ -505,23 +634,25 @@ Write image prompts using this six-part structure, in order:
 1. SUBJECT: who/what is in the frame, with specific attributes (age, clothing, materials, expression, posture)
 2. STYLE & MEDIUM: always name a concrete art style and medium from this pool — cinematic photography on 35mm film, editorial studio portrait (85mm, soft light), oil painting (impasto brushwork, rich palette), watercolor concept art, gouache illustration, pencil charcoal sketch, linocut print, stained glass window, fresco mural, mixed-media collage. When the brief names a style — anime, cyberpunk, surrealism — commit to it fully with its signature visual language (e.g. anime: bold linework, cel shading, expressive eyes, painterly backgrounds); never fall back to a generic look
 3. LIGHTING: describe lighting as a rig (key light direction + softness, fill level, rim/back light) — e.g., "soft key from camera-left through diffusion, low fill creating sculpted shadows, subtle rim outlining shoulders"; plus scenarios like golden hour, neon rim light, soft diffused window light, volumetric god rays, dramatic chiaroscuro
-4. COMPOSITION & CAMERA: framing (wide/medium/close-up), angle (eye-level, slightly elevated, low angle looking up), explicit composition rules (rule of thirds, leading lines, negative space placement, foreground/midground/background layering), and specific lens/camera specs (85mm for portraits at f/2.8 for moderate blur, 35mm for environmental context, 50mm for natural perspective, or macro for extreme detail)
+4. COMPOSITION & CAMERA: framing (wide/medium/close-up), angle (eye-level, slightly elevated, low angle looking up), explicit composition rules (rule of thirds, leading lines, negative space placement, foreground/midground/background layering), and specific lens/camera specs (85mm for portraits at f/2.8 for moderate blur, 35mm for environmental context, 50mm for natural perspective)
 5. MOOD & COLOR: emotional tone plus color grading direction (teal and orange, bleach bypass, warm grade, desaturated) and a named palette with precise hex references where relevant (e.g., #FFD700, #E91E63) or named combinations (warm amber and teal, muted pastel, high-contrast noir); specify exactly where each color lives in the frame
-6. DETAIL & TEXTURE: surface/material detail (film grain, visible brush strokes, glass reflections, fabric weave), plus atmospheric depth cues (volumetric haze catching highlights, distant elements softly blurred, dust motes in sunbeams). Never use cliché quality tokens like "masterpiece, 8k, hyperrealistic"
+6. DETAIL & TEXTURE: favor restraint — broad shapes, one unifying finish (a hint of film grain, soft brushwork, gentle glass sheen), and atmosphere carried by light (volumetric haze, distant elements softly blurred) rather than accumulated minutiae. The whole composition should still read at phone-thumbnail size: prefer forms and lighting a viewer grasps at a glance over fine detail they'd need to zoom to see. Never use cliché quality tokens like "masterpiece, 8k, hyperrealistic"
 
 Hard rules:
 - If the brief requests a specific aesthetic, commit to it with 2-3 signature style descriptors. A generic photo-like render of an anime request is a failure.
 - When a character appears, they must NOT look directly at the viewer. Use "three-quarter view looking away", "profile facing left", "gazing into the distance", "eyes closed in quiet reflection", or "seen from behind". If the subject must face forward, specify "soft focus on the face" or "shallow depth of field, face gently out of focus".
+- When the brief names a specific character (a quote attribution, a requested figure), do NOT render a recognizable face at all: keep any figure faceless, turned away, silhouetted, or blurred beyond recognition, and carry identity through iconic details and setting instead.
 - Neon or glow must be tasteful and restrained: rim lighting, reflections on wet surfaces, a limited palette of 2-3 glow colors. Never a flat wall of saturated neon.
 - Reserve one clean, low-detail area — name its location (upper third, left third, lower band) — for a later quote overlay; the text must never fight the focal point. The reserved area must be plain empty space (soft sky, smooth wall, out-of-focus background, shadowed ground), never a frame, board, screen, sign, or any object.
 - Never include text or anything that carries text: no words, letters, typography, signage, banners, posters, labels, captions, logos, watermarks, or UI elements. Also avoid objects that image models instinctively fill with writing: no books, magazines, newspapers, or loose papers with visible covers or pages; no billboards, neon signs, storefront signs, graffiti, murals, or scrolls with markings; no headbands with metal plates, printed t-shirts, name tags, screens, or displays. The artwork must be text-free; text is added later by the overlay system.
 - One clear focal subject, off-center, large enough to read at thumbnail size. No competing focal subjects, no collages, no stacked symbols.
 - **Style diversity**: Each generation must use a different art style from the pool above — do NOT default to anime or any single style. Rotate through: photography, oil painting, watercolor, pencil sketch, linocut, stained glass, fresco, collage, and only then anime/surrealism/cyberpunk when the brief suggests them.
-- **Category → style mapping** (use as a strong hint when a category is specified):
-  - `philosophy` → editorial photography, oil painting, or fresco mural (timeless, weighty)
-  - `literature` → watercolor concept art, gouache illustration, or stained glass (literary, luminous)
-  - `literary` → same as literature but favour pencil charcoal sketch or linocut (gritty, textual)
-  - `anime` → cel-shaded anime key visual (bold linework, expressive eyes, painterly backgrounds)
+- **Category → style mapping** (use as a strong hint when the brief suggests one):
+  - timeless, weighty, philosophical moods → editorial photography, oil painting, or fresco mural
+  - literary, luminous, bookish moods → watercolor concept art, gouache illustration, or stained glass
+  - gritty, textual, raw moods → pencil charcoal sketch or linocut print
+  - anime / manga / cel-shaded looks → cel-shaded anime key visual (bold linework, expressive eyes, painterly backgrounds)
+  - any other named genre, era, or aesthetic in the brief (noir, cyberpunk, ukiyo-e, baroque…) → commit to it fully with 2-3 signature descriptors of that style
 
 Write 60-120 words in flowing full sentences (the target generator is Flux — it reads natural language, not comma-tag soup). Make it specific and vivid."""
 
@@ -580,33 +711,42 @@ def _parse_caption_response(text: str) -> dict:
     return {"caption": text.strip(), "hashtags": []}
 
 
-def _wait_for_vram_free(timeout: int = 60):
-    """Wait for GPU VRAM to free up after killing llama-server using nvtop."""
+def _wait_for_vram_free(timeout: int = 30, free_threshold_gb: float = 2.0):
+    """Wait for GPU VRAM to free up after killing llama-server.
+
+    Queries nvidia-smi when available (any GPU, no model-name matching);
+    when no GPU tooling exists there is nothing to wait on beyond a short
+    grace period — the driver reclaims VRAM on process exit, and stop_llama
+    already reaped the process. Returns True when VRAM looks free.
+    """
+    import shutil
     import subprocess
+
+    smi = shutil.which("nvidia-smi")
+    if smi is None:
+        time.sleep(3)
+        return True
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
             result = subprocess.run(
-                ["nvtop", "-s"],
-                capture_output=True, text=True, timeout=5
+                [smi, "--query-gpu=memory.used",
+                 "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=10,
             )
-            data = json.loads(result.stdout)
-            for gpu in data:
-                if "4060" in gpu.get("device_name", ""):
-                    used_bytes = int(gpu.get("mem_used", 0))
-                    total_bytes = int(gpu.get("mem_total", 1))
-                    used_gb = used_bytes / (1024 ** 3)
-                    total_gb = total_bytes / (1024 ** 3)
-                    # If VRAM is below ~2GB, we're good to start ComfyUI
-                    if used_gb < 2.0:
-                        print(f"[llama] VRAM free: {used_gb:.1f}GB / {total_gb:.1f}GB")
-                        return True
-            # If no 4060 found, assume VRAM is clear
-            if not data:
+            used_mb = [
+                float(line.strip())
+                for line in result.stdout.splitlines()
+                if line.strip()
+            ]
+            if used_mb and all(mb / 1024 < free_threshold_gb for mb in used_mb):
+                print(f"[llama] VRAM free: {min(used_mb):.0f}MiB used")
                 return True
+            if not used_mb:
+                return True  # unexpected output — don't block the pipeline
         except Exception as e:
             print(f"[llama] VRAM check failed: {e}")
-            break
+            return True  # a broken query must never stall generation
         time.sleep(2)
     print("[llama] VRAM wait timed out — proceeding anyway")
     return False

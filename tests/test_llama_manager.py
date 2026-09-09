@@ -84,8 +84,29 @@ def test_normalise_hex_color_validation():
 
 def test_prompt_contains_new_fields():
     p = llama_manager.build_overlay_system_prompt()
-    for field in ("font_weight", "glow_color", "x_offset", "letter_spacing", "text_gradient_from"):
+    for field in ("font_weight", "glow_color", "x_offset", "letter_spacing", "text_gradient_from", "tag"):
         assert field in p
+
+
+def test_parse_overlay_response_keeps_tag():
+    raw = '{"quote": "Q.", "tag": "Ocean Calm"}'
+    d = llama_manager._parse_overlay_response(raw)
+    assert d["tag"] == "ocean-calm"
+
+
+def test_normalise_tag_sanitises():
+    n = llama_manager._normalise_overlay
+    assert n({"tag": "Stoicism!"})["tag"] == "stoicism"
+    assert n({"tag": "  "})["tag"] is None
+    assert n({})["tag"] is None
+    assert n({"tag": 42})["tag"] is None
+    assert n({"tag": "x" * 50})["tag"] == "x" * 30
+
+
+def test_art_system_style_mapping_is_genre_agnostic():
+    sys_msg = llama_manager._ART_SYSTEM
+    assert "recognizable genre" in sys_msg or "named genre" in sys_msg
+    assert "`philosophy` →" not in sys_msg
 
 
 def test_parse_overlay_response_valid_json():
@@ -122,6 +143,27 @@ def test_art_system_tasteful_neon():
     sys_msg = llama_manager._ART_SYSTEM
     assert "tasteful and restrained" in sys_msg
     assert "Never a flat wall of saturated neon" in sys_msg
+
+
+def test_art_system_forbids_recognizable_character_face():
+    """Named characters must stay faceless/blurred — identity via details."""
+    sys_msg = llama_manager._ART_SYSTEM
+    assert "do NOT render a recognizable face" in sys_msg
+    assert "blurred beyond recognition" in sys_msg
+
+
+def test_art_system_prefers_restraint_over_micro_detail():
+    """Detail guidance must nudge toward simplicity, never bait tiny details."""
+    sys_msg = llama_manager._ART_SYSTEM
+    assert "thumbnail" in sys_msg
+    assert "dust motes" not in sys_msg
+    assert "macro for extreme detail" not in sys_msg
+
+
+def test_build_art_prompt_prefers_calms_scenes():
+    p = llama_manager._build_art_prompt("ocean mood")
+    assert "uncluttered" in p
+    assert "low-detail" in p
 
 
 def test_build_art_prompt_six_part_structure():
@@ -357,3 +399,52 @@ def test_generate_text_overlay_no_quotes_for_unknown(monkeypatch):
     )
     user_msg = captured["body"]["messages"][1]["content"]
     assert "Real quotes from the requested source" not in user_msg
+
+
+def test_pick_quote_prefers_local_pool():
+    picked = llama_manager.pick_quote(category="anime", theme="naruto")
+    assert picked
+    assert all(q["source"] == "Naruto" for q in picked)
+
+
+def test_pick_quote_falls_back_to_web(monkeypatch):
+    web = [{"quote": "Web line here.", "author": "Web Author", "source": "Wikiquote"}]
+    monkeypatch.setattr("llama_manager.retrieve_quotes", lambda *a, **k: [])
+    monkeypatch.setattr("quote_search.search_quotes", lambda *a, **k: web)
+    assert llama_manager.pick_quote(theme="resilience") == web
+
+
+def test_pick_quote_empty_when_nothing_matches(monkeypatch):
+    monkeypatch.setattr("llama_manager.retrieve_quotes", lambda *a, **k: [])
+    monkeypatch.setattr("quote_search.search_quotes", lambda *a, **k: [])
+    assert llama_manager.pick_quote(theme="resilience") == []
+
+
+def test_pick_quote_never_raises(monkeypatch):
+    monkeypatch.setattr("llama_manager.retrieve_quotes", lambda *a, **k: [])
+
+    def boom(*a, **k):
+        raise RuntimeError("down")
+
+    monkeypatch.setattr("quote_search.search_quotes", boom)
+    assert llama_manager.pick_quote(theme="resilience") == []
+
+
+def test_overlay_accepts_external_recalled(monkeypatch):
+    """Quote-first: pre-picked web quote is offered verbatim, not re-fetched."""
+    captured = {}
+    recalled = [{"quote": "Web line here.", "author": "Web Author", "source": "Wikiquote"}]
+
+    def fake_retrieve(*a, **k):
+        raise AssertionError("must not re-fetch local pool")
+
+    monkeypatch.setattr(llama_manager, "retrieve_quotes", fake_retrieve)
+
+    def fake_post(url, json=None, timeout=None):
+        captured["body"] = json
+        return _FakeOverlayResponse()
+
+    monkeypatch.setattr(llama_manager.requests, "post", fake_post)
+    llama_manager.generate_text_overlay(None, "/tmp/img.png", recalled=recalled)
+    user_msg = captured["body"]["messages"][1]["content"]
+    assert "Web line here." in user_msg

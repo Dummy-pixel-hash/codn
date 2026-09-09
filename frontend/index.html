@@ -3,135 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="codn — local Instagram quote-art pipeline. Generate art, overlay quotes, publish.">
+  <meta name="theme-color" content="#0b0f0c" id="meta-theme">
+  <script>try{var _t=localStorage.getItem('codn-theme');if(_t!=='light'&&_t!=='dark'){_t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.dataset.theme=_t;}catch(e){document.documentElement.dataset.theme='dark';}</script>
   <title>codn — Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <meta property="og:title" content="codn — Dashboard">
+  <meta property="og:description" content="Local Instagram quote-art pipeline. Generate art, overlay quotes, publish.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="/css/style.css?v=1.5.0">
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <div class="app">
     <!-- Sidebar Navigation -->
-    <nav class="sidebar">
+    <nav class="sidebar" aria-label="Primary">
       <div class="sidebar-brand">
-        <span class="brand-icon">⚡</span>
+        <span class="brand-icon" aria-hidden="true">⚡</span>
         <span class="brand-name">codn</span>
+        <span class="brand-tag">prod</span>
       </div>
-      <div class="sidebar-nav">
-        <button class="nav-link active" data-section="dashboard" aria-label="Dashboard">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-eyebrow" aria-hidden="true">Menu</span>
+      <div class="sidebar-nav" role="tablist" aria-label="Sections">
+        <button type="button" class="nav-link active" data-section="dashboard" aria-label="Dashboard" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           <span>Dashboard</span>
         </button>
-        <button class="nav-link" data-section="quotes" aria-label="Quotes">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        <button type="button" class="nav-link" data-section="quotes" aria-label="Quotes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
           <span>Quotes</span>
         </button>
-        <button class="nav-link" data-section="history" aria-label="History">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <button type="button" class="nav-link" data-section="history" aria-label="History">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
           <span>History</span>
         </button>
-        <button class="nav-link" data-section="settings" aria-label="Settings">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <button type="button" class="nav-link" data-section="settings" aria-label="Settings">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>Settings</span>
         </button>
       </div>
       <div class="sidebar-footer">
-        <div class="status-dot online"></div>
-        <span class="status-text">Connected</span>
+        <div class="status-dot online" id="sidebar-dot" aria-hidden="true"></div>
+        <span class="status-text" id="sidebar-status">Connected</span>
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to light mode">
+          <span id="theme-icon" aria-hidden="true">☾</span>
+        </button>
       </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="main">
+    <main class="main" id="main">
       <!-- Dashboard Section -->
-      <section id="dashboard" class="section active">
+      <section id="dashboard" class="section active" aria-label="Dashboard">
         <header class="section-header">
-          <div style="display:flex;align-items:center;gap:12px">
+          <span class="eyebrow">Overview</span>
+          <div class="title-row">
             <h1>Dashboard</h1>
-            <span id="prompts-counter" class="prompt-counter">—</span>
+            <span id="prompts-counter" class="prompt-counter" title="Prompts generated">—</span>
+            <span id="backend-badge" class="backend-badge" title="Backend status">● local</span>
           </div>
           <p class="section-subtitle">Monitor your pipeline and start generating.</p>
         </header>
 
+        <!-- First-run setup banner (hidden when everything passes or dismissed) -->
+        <div id="setup-banner" class="setup-banner hidden reveal" role="status" aria-live="polite">
+          <div class="setup-banner-main">
+            <span class="setup-banner-icon" aria-hidden="true">⚙</span>
+            <div class="setup-banner-text">
+              <strong>Finish setup <span id="setup-count" class="setup-count">0/5</span></strong>
+              <span id="setup-summary" class="setup-summary">Checking…</span>
+            </div>
+          </div>
+          <div class="setup-banner-actions">
+            <button type="button" id="setup-open" class="btn btn-sm btn-primary">Open setup</button>
+            <button type="button" id="setup-dismiss" class="btn btn-sm btn-ghost" aria-label="Dismiss setup reminder">Later</button>
+          </div>
+        </div>
+
         <!-- Pipeline Status -->
-        <div class="status-grid">
-          <div class="status-card">
+        <div class="status-grid" role="status" aria-live="polite">
+          <div class="status-card reveal spot">
             <div class="status-card-header">
               <span class="status-label">LLaMA Server</span>
-              <span class="status-indicator online" data-status="llama"></span>
+              <span class="status-indicator idle" data-status="llama" aria-label="LLaMA status"></span>
             </div>
             <div class="status-card-body">
-              <span class="status-detail">port 8001</span>
+              <span class="status-detail">port 8001 · <span id="llama-state-text">checking…</span></span>
               <span class="status-model">Bonsai-27B-Q1_0</span>
             </div>
           </div>
-          <div class="status-card">
+          <div class="status-card reveal spot">
             <div class="status-card-header">
               <span class="status-label">ComfyUI</span>
-              <span class="status-indicator idle" data-status="comfy"></span>
+              <span class="status-indicator idle" data-status="comfy" aria-label="ComfyUI status"></span>
             </div>
             <div class="status-card-body">
-              <span class="status-detail">Flux-2 Klein 4B FP8</span>
+              <span class="status-detail">Flux-2 Klein 4B FP8 · <span id="comfy-state-text">checking…</span></span>
               <span class="status-model">1024×1024</span>
             </div>
           </div>
-          <div class="status-card">
+          <div class="status-card reveal spot">
             <div class="status-card-header">
-              <span class="status-label">Tunnel</span>
-              <span class="status-indicator online" data-status="tunnel"></span>
+              <span class="status-label">Tunnel · IG</span>
+              <span class="status-indicator idle" data-status="tunnel" aria-label="Tunnel status"></span>
             </div>
             <div class="status-card-body">
-              <span class="status-detail" id="tunnel-url">https://ngrok-url.ngrok.io</span>
-              <span class="status-engine">ngrok</span>
+              <span class="status-detail status-url" id="tunnel-url">resolving…</span>
+              <span class="status-model" id="ig-account-line">instagram: —</span>
             </div>
           </div>
         </div>
 
         <!-- Generate Section -->
-        <div class="generate-zone">
+        <div class="generate-zone reveal">
+          <div class="generate-core">
           <div class="generate-header">
+            <span class="eyebrow">Create</span>
             <h2>Generate Quote Art</h2>
-            <p class="generate-subtitle">Pick a category or let the pipeline choose.</p>
+            <p class="generate-subtitle">Describe the vibe in your own words. Server runs 4 phases sequentially — this can take several minutes on one GPU.</p>
           </div>
           <div class="generate-form">
             <div class="form-row">
-              <label class="form-label" for="theme-select">Category</label>
-              <select id="theme-select" class="form-select">
-                <option value="">Random (pick from all)</option>
-                <option value="philosophy">Philosophy</option>
-                <option value="anime">Anime</option>
-                <option value="literature">Literature</option>
-                <option value="literary">Literary</option>
-                <option value="general">General</option>
-              </select>
+              <label class="form-label" for="theme-input">Vibe / direction</label>
+              <input id="theme-input" type="text" class="form-input" placeholder="e.g. stoic resilience, dark ocean mood, Monday motivation" maxlength="200" autocomplete="off" spellcheck="false">
+              <p class="form-hint">Name a character, anime or film (e.g. Tony Stark, Naruto, Ghibli) to use a real quote from them.</p>
             </div>
-            <div class="form-row">
-              <label class="form-label" for="theme-input">Theme constraint (optional)</label>
-              <input id="theme-input" type="text" class="form-input" placeholder="e.g. sunset, cyberpunk, minimal">
-            </div>
-            <div class="form-row form-row-checkbox">
-              <label class="checkbox-label" for="upload-toggle">
-                <input id="upload-toggle" type="checkbox" checked>
-                Upload to Instagram after generation
-              </label>
-            </div>
-            <button id="generate-btn" class="btn btn-primary btn-lg">
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Start Generation
+            <p class="generate-note">Review first — nothing uploads automatically. Upload from the result card or history.</p>
+            <button type="button" id="generate-btn" class="btn btn-primary btn-lg">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span id="generate-btn-text">Start Generation</span>
             </button>
           </div>
 
           <!-- Progress Tracker -->
-          <div id="progress-tracker" class="progress-tracker hidden">
+          <div id="progress-tracker" class="progress-tracker hidden" aria-live="polite">
             <div class="progress-header">
-              <span class="progress-title">Generation in progress</span>
-              <button id="cancel-gen" class="btn btn-sm btn-ghost">Cancel</button>
+              <span class="progress-title">Generation in progress <span class="progress-eta" id="progress-eta">· server is working, keep this tab open</span></span>
+              <button type="button" id="cancel-gen" class="btn btn-sm btn-ghost">Cancel request</button>
             </div>
+            <p class="progress-note">The server queues this as a job and runs 4 phases on one GPU. Phase lights update live by polling the job — safe to keep working in other tabs.</p>
             <div class="phase-steps">
-              <div class="phase-step active" data-phase="art-prompt">
+              <div class="phase-step" data-phase="art-prompt">
                 <span class="phase-num">1</span>
                 <span class="phase-label">Art prompt</span>
-                <span class="phase-status">generating...</span>
+                <span class="phase-status">waiting</span>
               </div>
               <div class="phase-step" data-phase="art-gen">
                 <span class="phase-num">2</span>
@@ -149,189 +169,476 @@
                 <span class="phase-status">waiting</span>
               </div>
             </div>
+            <p class="progress-cancel-note">Cancel asks the server to stop the job between phases — the current GPU phase finishes first.</p>
+          </div>
+
+          <!-- Result showcase -->
+          <div id="result-card" class="result-card hidden reveal" aria-live="polite">
+            <div class="result-thumb">
+              <img id="result-img" src="" alt="Latest generated quote art">
+            </div>
+            <div class="result-body">
+              <div class="result-top">
+                <span id="result-badge" class="history-badge success">✓ Done</span>
+                <span id="result-time" class="history-date"></span>
+              </div>
+              <p id="result-quote" class="result-quote"></p>
+              <p id="result-prompt" class="result-prompt"></p>
+              <div class="result-actions">
+                <a id="result-view" href="#" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">Open full size</a>
+                <a id="result-download" href="#" download class="btn btn-sm btn-ghost">Download</a>
+                <button type="button" id="result-copy" class="btn btn-sm btn-ghost">Copy prompt</button>
+                <button type="button" id="result-edit" class="btn btn-sm btn-ghost">Edit text</button>
+                <button type="button" id="result-upload" class="btn btn-sm btn-primary">Upload</button>
+              </div>
+            </div>
+          </div>
           </div>
         </div>
 
         <!-- Recent Activity -->
         <div class="activity-section">
-          <h3>Recent Activity</h3>
-          <div class="activity-list">
-            <div class="activity-item success">
-              <span class="activity-badge success">✓ Success</span>
-              <span class="activity-time">2 minutes ago</span>
-              <span class="activity-desc">Category: anime — Quote #1847</span>
-            </div>
-            <div class="activity-item error">
-              <span class="activity-badge error">✗ Failed</span>
-              <span class="activity-time">15 minutes ago</span>
-              <span class="activity-desc">Category: philosophy — Quote #923 — Connection timeout</span>
-            </div>
-            <div class="activity-item success">
-              <span class="activity-badge success">✓ Success</span>
-              <span class="activity-time">1 hour ago</span>
-              <span class="activity-desc">Category: literature — Quote #2104</span>
-            </div>
+          <div class="activity-head">
+            <h3>Recent Activity</h3>
+            <button type="button" class="btn btn-sm btn-ghost" id="refresh-activity">Refresh</button>
+          </div>
+          <div class="activity-list" id="activity-list">
+            <div class="skeleton-row" aria-hidden="true"><span class="skeleton"></span><span class="skeleton short"></span></div>
           </div>
         </div>
       </section>
 
       <!-- Quotes Section -->
-      <section id="quotes" class="section">
+      <section id="quotes" class="section" aria-label="Quotes">
         <header class="section-header">
           <h1>Quotes</h1>
           <p class="section-subtitle">Browse, search, and manage your quote library.</p>
         </header>
 
-        <!-- Search & Filters -->
         <div class="quotes-toolbar">
           <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input id="quote-search" type="text" class="form-input search-input" placeholder="Search quotes...">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input id="quote-search" type="search" class="form-input search-input" placeholder="Search quotes or authors…" autocomplete="off" aria-label="Search quotes">
           </div>
           <div class="filter-group">
-            <select id="category-filter" class="form-select sm">
-              <option value="">All categories</option>
-              <option value="philosophy">Philosophy</option>
-              <option value="anime">Anime</option>
-              <option value="literature">Literature</option>
-              <option value="literary">Literary</option>
-              <option value="general">General</option>
-            </select>
-            <button class="btn btn-sm btn-ghost" id="add-quote-btn">+ Add Quote</button>
+            <input id="category-filter" type="search" class="form-input sm" placeholder="Filter by tag…" autocomplete="off" aria-label="Filter by tag">
+            <button type="button" class="btn btn-sm btn-ghost" id="add-quote-btn">+ Add Quote</button>
           </div>
         </div>
 
-        <!-- Quotes Grid -->
-        <div class="quotes-grid" id="quotes-grid"></div>
+        <div class="quotes-grid" id="quotes-grid" aria-live="polite"></div>
 
-        <!-- Pagination -->
         <div class="pagination" id="quotes-pagination">
-          <button class="btn btn-sm btn-ghost" disabled>← Previous</button>
-          <span class="page-info">No quotes yet</span>
-          <button class="btn btn-sm btn-ghost" disabled>Next →</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="quotes-prev">← Previous</button>
+          <span class="page-info" id="quotes-page-info">No quotes yet</span>
+          <button type="button" class="btn btn-sm btn-ghost" id="quotes-next">Next →</button>
         </div>
       </section>
 
       <!-- History Section -->
-      <section id="history" class="section">
+      <section id="history" class="section" aria-label="Generation history">
         <header class="section-header">
           <h1>Generation History</h1>
           <p class="section-subtitle">Past outputs and their status.</p>
         </header>
 
-        <!-- History Filters -->
         <div class="history-toolbar">
-          <select id="status-filter" class="form-select sm">
-            <option value="">All statuses</option>
-            <option value="success">Success</option>
-            <option value="error">Failed</option>
-          </select>
-          <button class="btn btn-sm btn-ghost" id="export-btn">Export CSV</button>
+          <div class="filter-group">
+            <select id="status-filter" class="form-select sm" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="success">Success</option>
+              <option value="upload_failed">Upload failed</option>
+              <option value="failed">Failed</option>
+            </select>
+            <input id="history-category-filter" type="search" class="form-input sm" placeholder="Filter by tag…" autocomplete="off" aria-label="Filter history by tag">
+          </div>
+          <div class="filter-group">
+            <button type="button" class="btn btn-sm btn-ghost" id="refresh-history">Refresh</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-btn">Export CSV</button>
+          </div>
         </div>
 
-        <!-- History Grid -->
-        <div class="history-grid" id="history-grid"></div>
+        <div class="history-grid" id="history-grid" aria-live="polite"></div>
+        <div class="pagination" id="history-pagination">
+          <button type="button" class="btn btn-sm btn-ghost" id="history-prev">← Previous</button>
+          <span class="page-info" id="history-page-info"></span>
+          <button type="button" class="btn btn-sm btn-ghost" id="history-next">Next →</button>
+        </div>
       </section>
 
       <!-- Settings Section -->
-      <section id="settings" class="section">
+      <section id="settings" class="section" aria-label="Settings">
         <header class="section-header">
+          <span class="eyebrow">Configure</span>
           <h1>Settings</h1>
-          <p class="section-subtitle">Configure your pipeline and integrations.</p>
+          <p class="section-subtitle">Tune the pipeline, tunnels, and integrations.</p>
         </header>
 
-        <!-- Pipeline Config -->
-        <div class="settings-group">
-          <h3>Pipeline</h3>
-          <div class="form-row">
-            <label class="form-label" for="llama-port">LLaMA Server Port</label>
-            <input id="llama-port" type="number" class="form-input sm" value="8001">
+        <div class="notice notice-warn" role="note">
+          <strong>Local-only.</strong> Values here stay in this browser and are never sent to the server — except the API token, which is sent as an auth header and kept in session memory only (cleared when the tab closes).
+        </div>
+
+        <div class="pref-card reveal">
+          <div class="pref-head">
+            <span class="pref-index" aria-hidden="true">01</span>
+            <div>
+              <h3>Access</h3>
+              <p class="pref-sub">Proof it's you. Required for everything the server guards.</p>
+            </div>
           </div>
-          <div class="form-row">
-            <label class="form-label" for="comfy-port">ComfyUI Port</label>
-            <input id="comfy-port" type="number" class="form-input sm" value="8188">
-          </div>
-          <div class="form-row">
-            <label class="form-label" for="model-path">Model Path</label>
-            <input id="model-path" type="text" class="form-input" value="/home/Darsh/models/Bonsai-27B-Q1_0.gguf">
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="api-token">API Token</label>
+              <p class="pref-hint">Session only. Must match <code>API_TOKEN</code> in the server's <code>.env</code>.</p>
+            </div>
+            <div class="pref-control">
+              <input id="api-token" type="password" class="form-input sm" placeholder="paste API_TOKEN from server .env" autocomplete="off" spellcheck="false">
+              <p class="modal-note">Takes effect immediately — Save keeps it for this tab session. Generate with <code>python3 -c "import secrets; print(secrets.token_urlsafe(32))"</code>, then restart the app.</p>
+            </div>
           </div>
         </div>
 
-        <!-- Tunnel Config -->
-        <div class="settings-group">
-          <h3>Tunnel</h3>
-          <div class="form-row">
-            <label class="form-label" for="tunnel-engine">Engine</label>
-            <select id="tunnel-engine" class="form-select sm">
-              <option value="ngrok" selected>ngrok</option>
-              <option value="cloudflare">Cloudflare Quick Tunnel</option>
-            </select>
+        <div class="pref-card reveal">
+          <div class="pref-head">
+            <span class="pref-index" aria-hidden="true">02</span>
+            <div>
+              <h3>Pipeline</h3>
+              <p class="pref-sub">Where the local models live.</p>
+            </div>
           </div>
-          <div class="form-row">
-            <label class="form-label" for="ngrok-token">Ngrok Auth Token</label>
-            <input id="ngrok-token" type="text" class="form-input sm" value="2a8f3b1c4d5e6f7g8h9i0j">
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="llama-port">LLaMA server port</label>
+              <p class="pref-hint">Port your local text model listens on.</p>
+            </div>
+            <div class="pref-control">
+              <input id="llama-port" type="number" class="form-input sm" placeholder="8001" autocomplete="off">
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="comfy-port">ComfyUI port</label>
+              <p class="pref-hint">Port the art backend listens on.</p>
+            </div>
+            <div class="pref-control">
+              <input id="comfy-port" type="number" class="form-input sm" placeholder="8189" autocomplete="off">
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="model-path">Model path</label>
+              <p class="pref-hint">Text-generation <code>.gguf</code> on the server — applied on Save.</p>
+            </div>
+            <div class="pref-control">
+              <input id="model-path" type="text" class="form-input" placeholder="/path/to/Bonsai-27B-Q1_0.gguf" autocomplete="off" spellcheck="false">
+            </div>
           </div>
         </div>
 
-        <!-- Instagram Account -->
-        <div class="settings-group">
-          <h3>Instagram</h3>
-          <div class="form-row">
-            <label class="form-label" for="ig-access-token">Access Token</label>
-            <input id="ig-access-token" type="password" class="form-input sm" value="IGQWR1a2b3c4d5e6f7g8h9i0j">
+        <div class="pref-card reveal">
+          <div class="pref-head">
+            <span class="pref-index" aria-hidden="true">03</span>
+            <div>
+              <h3>Tunnel</h3>
+              <p class="pref-sub">How Instagram reaches your machine.</p>
+            </div>
           </div>
-          <div class="form-row">
-            <label class="form-label" for="ig-page-id">Page ID</label>
-            <input id="ig-page-id" type="text" class="form-input sm" value="17841405793180680">
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="tunnel-engine">Engine</label>
+              <p class="pref-hint">Which tunnel exposes <code>/media</code> publicly.</p>
+            </div>
+            <div class="pref-control">
+              <select id="tunnel-engine" class="form-select sm">
+                <option value="ngrok" selected>ngrok</option>
+                <option value="cloudflare">Cloudflare Quick Tunnel</option>
+              </select>
+            </div>
           </div>
-          <div class="form-row">
-            <label class="form-label" for="ig-user-id">User ID</label>
-            <input id="ig-user-id" type="text" class="form-input sm" value="17841405793180680">
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="ngrok-token">Ngrok auth token</label>
+              <p class="pref-hint">Local reminder only. Optional.</p>
+            </div>
+            <div class="pref-control">
+              <input id="ngrok-token" type="password" class="form-input sm" placeholder="leave blank" autocomplete="off" spellcheck="false">
+            </div>
           </div>
         </div>
 
-        <div class="settings-actions">
-          <button class="btn btn-primary">Save Settings</button>
-          <button class="btn btn-ghost">Reset to Defaults</button>
+        <div class="pref-card reveal">
+          <div class="pref-head">
+            <span class="pref-index" aria-hidden="true">04</span>
+            <div>
+              <h3>Instagram</h3>
+              <p class="pref-sub">Server account: <strong id="ig-server-account">—</strong></p>
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="ig-access-token">Access token</label>
+              <p class="pref-hint">Local reminder only — the server reads its own <code>.env</code>.</p>
+            </div>
+            <div class="pref-control">
+              <input id="ig-access-token" type="password" class="form-input sm" placeholder="leave blank" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="ig-page-id">Page ID</label>
+              <p class="pref-hint">Numeric ID of the Facebook Page linked to Instagram.</p>
+            </div>
+            <div class="pref-control">
+              <input id="ig-page-id" type="text" class="form-input sm" placeholder="leave blank" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="ig-user-id">User ID</label>
+              <p class="pref-hint">Numeric Instagram business account ID.</p>
+            </div>
+            <div class="pref-control">
+              <input id="ig-user-id" type="text" class="form-input sm" placeholder="leave blank" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+        </div>
+
+        <div class="pref-card reveal">
+          <div class="pref-head">
+            <span class="pref-index" aria-hidden="true">05</span>
+            <div>
+              <h3>Post-editing</h3>
+              <p class="pref-sub">Refine words before they bake in.</p>
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <label class="form-label" for="postedit-toggle">Text editing</label>
+              <p class="pref-hint">Offer the overlay editor after each generation.</p>
+            </div>
+            <div class="pref-control">
+              <label class="checkbox-label" for="postedit-toggle">
+                <input id="postedit-toggle" type="checkbox" checked>
+                Enable post-generation text editing before finalizing
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-actions settings-actions-bar">
+          <button type="button" class="btn btn-ghost" id="rerun-setup">Run setup wizard</button>
+          <button type="button" class="btn btn-ghost" id="reset-settings">Reset to Defaults</button>
+          <button type="button" class="btn btn-primary" id="save-settings">Save Settings</button>
         </div>
       </section>
     </main>
   </div>
 
+  <!-- Toasts -->
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+
   <!-- Add Quote Modal -->
-  <div id="add-quote-modal" class="modal hidden">
+  <div id="add-quote-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="add-quote-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Add New Quote</h3>
-        <button class="modal-close" id="close-modal">&times;</button>
+        <h3 id="add-quote-title">Add New Quote</h3>
+        <button type="button" class="modal-close" id="close-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <div class="form-row">
-          <label class="form-label">Quote Text</label>
-          <textarea id="new-quote-text" class="form-input" rows="4" placeholder="Enter the quote text..."></textarea>
+          <label class="form-label" for="new-quote-text">Quote Text</label>
+          <textarea id="new-quote-text" class="form-input" rows="4" placeholder="Enter the quote text..." maxlength="500"></textarea>
         </div>
         <div class="form-row">
-          <label class="form-label">Source / Author</label>
-          <input id="new-quote-source" type="text" class="form-input" placeholder="e.g. Albert Camus">
+          <label class="form-label" for="new-quote-source">Source / Author</label>
+          <input id="new-quote-source" type="text" class="form-input" placeholder="e.g. Albert Camus" maxlength="120" autocomplete="off">
         </div>
         <div class="form-row">
-          <label class="form-label">Category</label>
-          <select id="new-quote-category" class="form-select">
-            <option value="philosophy">Philosophy</option>
-            <option value="anime">Anime</option>
-            <option value="literature">Literature</option>
-            <option value="literary">Literary</option>
-            <option value="general">General</option>
-          </select>
+          <label class="form-label" for="new-quote-category">Tag (optional)</label>
+          <input id="new-quote-category" type="text" class="form-input" placeholder="e.g. stoicism" maxlength="100" autocomplete="off">
         </div>
+        <p class="modal-note" id="add-quote-note">Saved to the server library (dedup list + quote history).</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" id="cancel-add-quote">Cancel</button>
-        <button class="btn btn-primary" id="save-add-quote">Save Quote</button>
+        <button type="button" class="btn btn-ghost" id="cancel-add-quote">Cancel</button>
+        <button type="button" class="btn btn-primary" id="save-add-quote">Save Quote</button>
       </div>
     </div>
   </div>
 
-  <script src="/js/app.js"></script>
+  <!-- Post-edit Overlay Modal -->
+  <div id="edit-overlay-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="edit-overlay-title">
+    <div class="modal-content edit-overlay-content">
+      <div class="modal-header">
+        <h3 id="edit-overlay-title">Edit Text Overlay</h3>
+        <button type="button" class="modal-close" id="close-edit-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section">
+          <label class="form-label section-title">Live Preview</label>
+          <div class="preview-container">
+            <img id="preview-img" src="" alt="Preview of edited overlay">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label section-title">Quote &amp; Author</label>
+          <div class="form-row">
+            <label class="form-label" for="edit-quote-text">Quote</label>
+            <textarea id="edit-quote-text" class="form-input" rows="3" placeholder="Edit the quote text..." maxlength="500"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="edit-author">Author</label>
+            <input id="edit-author" type="text" class="form-input" placeholder="Source / author name" maxlength="120" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="form-section form-section-row">
+          <div class="form-row-half">
+            <label class="form-label" for="edit-font-size">Font Size</label>
+            <select id="edit-font-size" class="form-select sm">
+              <option value="small">Small</option>
+              <option value="medium" selected>Medium</option>
+              <option value="large">Large</option>
+              <option value="xlarge">Extra large</option>
+            </select>
+          </div>
+          <div class="form-row-half">
+            <label class="form-label" for="edit-text-color">Text Color</label>
+            <input id="edit-text-color" type="color" class="form-input color-picker" value="#FFFFFF" aria-label="Text color">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label section-title" id="pos-label">Position</label>
+          <p class="position-hint">Click a cell to set the text placement anchor.</p>
+          <div class="position-grid" data-position="bottom-center" role="group" aria-labelledby="pos-label">
+            <button type="button" class="pos-cell" data-anchor="top-left" aria-label="Top left" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="top-center" aria-label="Top center" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="top-right" aria-label="Top right" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="middle-left" aria-label="Middle left" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell pos-center" data-anchor="center" aria-label="Center" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="middle-right" aria-label="Middle right" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="bottom-left" aria-label="Bottom left" aria-pressed="false">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="bottom-center" aria-label="Bottom center" aria-pressed="true">&nbsp;</button>
+            <button type="button" class="pos-cell" data-anchor="bottom-right" aria-label="Bottom right" aria-pressed="false">&nbsp;</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer modal-footer-sticky">
+        <span id="edit-loading" class="edit-loading" hidden>Loading preview…</span>
+        <button type="button" class="btn btn-ghost" id="cancel-edit-overlay">Cancel</button>
+        <button type="button" class="btn btn-primary" id="apply-edit-overlay">Apply &amp; Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload to Instagram -->
+  <div id="upload-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="upload-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="upload-title">Upload to Instagram</h3>
+        <button type="button" class="modal-close" id="close-upload-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-container">
+          <img id="upload-img" src="" alt="Image to upload">
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="upload-caption">Caption</label>
+          <textarea id="upload-caption" class="form-input" rows="4" maxlength="2200" placeholder="Write a caption…"></textarea>
+        </div>
+        <div class="form-row form-row-checkbox">
+          <label class="checkbox-label" for="upload-is-reel">
+            <input id="upload-is-reel" type="checkbox">
+            Post as Reel (falls back to image post if unsupported)
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-sticky">
+        <button type="button" class="btn btn-ghost" id="cancel-upload">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirm-upload">Post now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-run Setup Wizard -->
+  <div id="setup-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+    <div class="modal-content setup-content">
+      <div class="modal-header">
+        <h3 id="setup-title">First-time setup</h3>
+        <button type="button" class="modal-close" id="setup-close" aria-label="Close">×</button>
+      </div>
+      <ol class="setup-rail" id="setup-rail" aria-label="Setup steps">
+        <li data-step="0" class="active"><span class="rail-dot">1</span><span class="rail-label">Access</span></li>
+        <li data-step="1"><span class="rail-dot">2</span><span class="rail-label">Model</span></li>
+        <li data-step="2"><span class="rail-dot">3</span><span class="rail-label">Instagram</span></li>
+        <li data-step="3"><span class="rail-dot">4</span><span class="rail-label">Services &amp; test</span></li>
+      </ol>
+      <div class="modal-body">
+        <!-- Step 1: Access -->
+        <div class="setup-step active" data-step="0">
+          <p class="setup-lead">Paste the <code>API_TOKEN</code> from the server's <code>.env</code> (printed by <code>start-all.sh</code> on first boot). It stays in this tab's session memory only.</p>
+          <div class="form-row">
+            <label class="form-label" for="setup-token">API Token</label>
+            <input id="setup-token" type="password" class="form-input" placeholder="paste token…" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="setup-row">
+            <button type="button" class="btn btn-sm btn-ghost" id="setup-verify-token">Verify</button>
+            <span id="setup-token-result" class="setup-result" aria-live="polite"></span>
+          </div>
+        </div>
+        <!-- Step 2: Model -->
+        <div class="setup-step" data-step="1">
+          <p class="setup-lead">Point codn at your text model (<code>.gguf</code>). The server checks the file exists before saving.</p>
+          <div class="form-row">
+            <label class="form-label" for="setup-model">Model path</label>
+            <input id="setup-model" type="text" class="form-input" placeholder="/path/to/Bonsai-27B-Q1_0.gguf" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="setup-row">
+            <button type="button" class="btn btn-sm btn-ghost" id="setup-check-model">Check current</button>
+            <button type="button" class="btn btn-sm btn-primary" id="setup-save-model">Save model</button>
+            <span id="setup-model-result" class="setup-result" aria-live="polite"></span>
+          </div>
+        </div>
+        <!-- Step 3: Instagram -->
+        <div class="setup-step" data-step="2">
+          <p class="setup-lead">Connect Instagram. Credentials are verified live against the Graph API before anything is stored.</p>
+          <div class="form-row">
+            <label class="form-label" for="setup-ig-token">Access Token</label>
+            <input id="setup-ig-token" type="password" class="form-input" placeholder="long-lived access token" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="setup-ig-id">Business / Page ID</label>
+            <input id="setup-ig-id" type="text" class="form-input" placeholder="e.g. 17841405793180680" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="setup-row">
+            <button type="button" class="btn btn-sm btn-primary" id="setup-save-ig">Verify &amp; save</button>
+            <span id="setup-ig-result" class="setup-result" aria-live="polite"></span>
+          </div>
+          <p class="modal-note" id="setup-ig-note">Older servers store these from <code>.env</code> only — then use “Verify” to re-check the live link.</p>
+        </div>
+        <!-- Step 4: Services & trial -->
+        <div class="setup-step" data-step="3">
+          <p class="setup-lead">Confirm the tunnel and ComfyUI are reachable, then fire one trial generation (no upload).</p>
+          <div class="setup-checks" id="setup-checks" aria-live="polite"></div>
+          <div class="setup-row">
+            <button type="button" class="btn btn-sm btn-ghost" id="setup-refresh-checks">Re-check services</button>
+            <button type="button" class="btn btn-sm btn-primary" id="setup-trial">Run trial generation</button>
+          </div>
+          <span id="setup-trial-result" class="setup-result" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-sticky">
+        <button type="button" class="btn btn-ghost" id="setup-skip">Skip for now</button>
+        <span class="setup-spacer"></span>
+        <button type="button" class="btn btn-ghost" id="setup-back">← Back</button>
+        <button type="button" class="btn btn-primary" id="setup-next">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js?v=1.5.0" defer></script>
 </body>
 </html>

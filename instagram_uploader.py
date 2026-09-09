@@ -3,7 +3,6 @@ Upload generated content to Instagram via the Graph API.
 Handles both feed posts and Reels (with optional music).
 """
 
-import os
 import time
 import requests
 from pathlib import Path
@@ -24,6 +23,46 @@ def _graph_url(path: str) -> str:
     return f"{INSTAGRAM_GRAPH_URL.rstrip('/')}/{path.lstrip('/')}"
 
 
+def _discover_base_url() -> tuple[str, str]:
+    """Find the public base URL, returning (url, engine).
+
+    Precedence: PUBLIC_BASE_URL env, reserved ngrok static domain, live
+    ngrok tunnel (local API on 4040), then the last Cloudflare URL in the
+    tunnel log. Engine is one of "config", "ngrok", "cloudflare", "".
+    """
+    base_url = PUBLIC_BASE_URL.strip().rstrip("/") if PUBLIC_BASE_URL else ""
+    if base_url:
+        return base_url, "config"
+    if NGROK_STATIC_DOMAIN:
+        # Reserved static domain — stable across restarts, unlike rotating
+        # tunnel URLs, so Meta never sees a broken or blocked media host.
+        return f"https://{NGROK_STATIC_DOMAIN.strip().strip('/')}", "ngrok"
+    # start-all.sh launches ngrok on port 4040. Prefer its live HTTPS
+    # tunnel over any URL cached in cloudflared.log from an older run.
+    try:
+        tunnels = requests.get("http://127.0.0.1:4040/api/tunnels", timeout=2).json().get("tunnels", [])
+        live = next(
+            (t["public_url"] for t in tunnels if t.get("public_url", "").startswith("https://")),
+            "",
+        ).rstrip("/")
+        if live:
+            return live, "ngrok"
+    except (requests.RequestException, ValueError, KeyError):
+        pass
+    # Cloudflare Quick Tunnel has no local inspector API; read the URL
+    # printed by cloudflared instead. This is deliberately last so a
+    # stale log entry cannot override a running ngrok tunnel.
+    try:
+        import re
+        log_text = CLOUDFLARED_LOG.read_text(errors="replace")
+        matches = re.findall(r"https://[a-z0-9-]+\.trycloudflare\.com", log_text)
+        if matches:
+            return matches[-1], "cloudflare"
+    except OSError:
+        pass
+    return "", ""
+
+
 def _public_image_url(image_path: str) -> str | None:
     """Build a public URL Instagram can fetch for a generated image."""
     path = Path(image_path)
@@ -31,34 +70,7 @@ def _public_image_url(image_path: str) -> str | None:
         print(f"[ig] Image not found: {image_path}")
         return None
 
-    base_url = PUBLIC_BASE_URL.strip().rstrip("/") if PUBLIC_BASE_URL else ""
-    if not base_url and NGROK_STATIC_DOMAIN:
-        # Reserved static domain — stable across restarts, unlike rotating
-        # tunnel URLs, so Meta never sees a broken or blocked media host.
-        base_url = f"https://{NGROK_STATIC_DOMAIN.strip().strip('/')}"
-    if not base_url:
-        # start-all.sh launches ngrok on port 4040. Prefer its live HTTPS
-        # tunnel over any URL cached in cloudflared.log from an older run.
-        try:
-            tunnels = requests.get("http://127.0.0.1:4040/api/tunnels", timeout=2).json().get("tunnels", [])
-            base_url = next(
-                (t["public_url"] for t in tunnels if t.get("public_url", "").startswith("https://")),
-                "",
-            ).rstrip("/")
-        except (requests.RequestException, ValueError, KeyError):
-            pass
-    if not base_url:
-        # Cloudflare Quick Tunnel has no local inspector API; read the URL
-        # printed by cloudflared instead. This is deliberately last so a
-        # stale log entry cannot override a running ngrok tunnel.
-        try:
-            import re
-            log_text = CLOUDFLARED_LOG.read_text(errors="replace")
-            matches = re.findall(r"https://[a-z0-9-]+\.trycloudflare\.com", log_text)
-            if matches:
-                base_url = matches[-1]
-        except OSError:
-            pass
+    base_url, _engine = _discover_base_url()
 
     if not base_url:
         print("[ig] No public image URL available. Set PUBLIC_BASE_URL or run ngrok on port 4040.")
@@ -200,14 +212,21 @@ def upload_post(image_path: str, caption: str = "") -> dict | None:
     return publish_result
 
 
-def upload_reel(image_path: str, caption: str = "", music_url: str = "") -> dict | None:
+def upload_reel(image_path: str, caption: str = "", music_asset_id: str = "") -> dict | None:
     """
-    Upload an image as a Reel (static image Reel).
+    Upload an image as a Reel (static-image Reel).
+
+    Uses the same public-image-URL container flow as upload_post: Meta
+    fetches the image from our tunnel, so no file handle is ever leaked
+    and every request has a timeout. A REELS container is attempted first
+    (with music_asset_id when provided); when the account/API rejects it,
+    falls back once to a plain image post so the run degrades instead of
+    failing — matching the documented "no failure" behaviour.
 
     Args:
         image_path: Path to the image file
         caption: Caption text
-        music_url: Optional music/audio URL (may not be supported for all accounts)
+        music_asset_id: Optional music asset ID (may not be supported)
 
     Returns:
         API response dict or None on failure
@@ -216,39 +235,50 @@ def upload_reel(image_path: str, caption: str = "", music_url: str = "") -> dict
         print("[ig] Missing Instagram credentials")
         return None
 
-    # Step 1: Create a container with video-like media (image as reel)
-    url = f"https://graph.instagram.com/{INSTAGRAM_BUSINESS_ID}/media"
-    files = {"image": (os.path.basename(image_path), open(image_path, "rb"), "image/jpeg")}
-    data = {
-        "caption": caption,
-        "is_reel": "true",
-    }
-    if music_url:
-        data["music_asset_id"] = music_url
+    image_url = _public_image_url(image_path)
+    if not image_url or not _check_public_image(image_url):
+        return None
 
-    resp = requests.post(url, headers={"Authorization": f"Bearer {INSTAGRAM_ACCESS_TOKEN}"},
-                         files=files, data=data)
+    url = _graph_url(f"{INSTAGRAM_BUSINESS_ID}/media")
+    form = {
+        "image_url": (None, image_url),
+        "media_type": (None, "REELS"),
+        "access_token": (None, INSTAGRAM_ACCESS_TOKEN),
+    }
+    if caption:
+        form["caption"] = (None, caption)
+    if music_asset_id:
+        form["music_asset_id"] = (None, music_asset_id)
+    try:
+        resp = requests.post(url, files=form, timeout=30)
+    except requests.RequestException as e:
+        print(f"[ig] Reel container request failed: {e}")
+        return upload_post(image_path, caption)
 
     if resp.status_code != 200:
-        print(f"[ig] Reel container failed: {resp.status_code} {resp.text}")
-        # Retry without music
-        if music_url:
-            return upload_reel(image_path, caption, music_url="")
-        return None
+        _print_api_error("Reel container failed, falling back to image post", resp)
+        return upload_post(image_path, caption)
 
     result = resp.json()
     container_id = result.get("id")
     print(f"[ig] Reel container created: {container_id}")
 
-    # Step 2: Publish
-    publish_url = f"https://graph.instagram.com/{INSTAGRAM_BUSINESS_ID}/media_publish"
-    publish_data = {"creation_id": container_id}
+    if not container_id or not _wait_for_container(container_id):
+        print("[ig] Reel container not ready, falling back to image post")
+        return upload_post(image_path, caption)
 
-    resp = requests.post(publish_url, headers={"Authorization": f"Bearer {INSTAGRAM_ACCESS_TOKEN}"},
-                         data=publish_data)
+    # Step 2: Publish
+    publish_url = _graph_url(f"{INSTAGRAM_BUSINESS_ID}/media_publish")
+    publish_data = {"creation_id": container_id, "access_token": INSTAGRAM_ACCESS_TOKEN}
+
+    try:
+        resp = requests.post(publish_url, data=publish_data, timeout=30)
+    except requests.RequestException as e:
+        print(f"[ig] Reel publish request failed: {e}")
+        return None
 
     if resp.status_code != 200:
-        print(f"[ig] Reel publish failed: {resp.status_code} {resp.text}")
+        _print_api_error("Reel publish failed", resp)
         return None
 
     publish_result = resp.json()
@@ -263,7 +293,8 @@ def get_account_info() -> dict | None:
 
     url = _graph_url(INSTAGRAM_BUSINESS_ID)
     resp = requests.get(url, params={"fields": "username,account_type,name",
-                                      "access_token": INSTAGRAM_ACCESS_TOKEN})
+                                      "access_token": INSTAGRAM_ACCESS_TOKEN},
+                        timeout=15)
 
     if resp.status_code == 200:
         return resp.json()

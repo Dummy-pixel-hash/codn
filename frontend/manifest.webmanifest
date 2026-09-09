@@ -1,0 +1,1 @@
+{"background_color": "#0a0b0e", "description": "codn — local Instagram quote-art pipeline.", "display": "standalone", "icons": [{"purpose": "any", "sizes": "64x64", "src": "/favicon.svg", "type": "image/svg+xml"}], "name": "codn", "short_name": "codn", "start_url": "/", "theme_color": "#0a0b0e"}
